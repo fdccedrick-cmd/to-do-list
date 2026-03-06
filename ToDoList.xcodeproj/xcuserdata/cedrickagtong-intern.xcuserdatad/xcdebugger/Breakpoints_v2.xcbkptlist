@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   uuid = "19323E1B-1F38-46CE-809F-C5CAAB4A6AB1"
+   type = "1"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "067CA774-51DE-41B5-BCEB-92EDBA8E3A12"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ToDoList/Core/Services/AuthService.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "18"
+            endingLineNumber = "18"
+            landmarkName = "AuthService"
+            landmarkType = "3">
+            <Locations>
+               <Location
+                  uuid = "067CA774-51DE-41B5-BCEB-92EDBA8E3A12 - 2e4b05871fd21731"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "property wrapper backing initializer of ToDoList.AuthService.errorMessage : Swift.Optional&lt;Swift.String&gt;"
+                  moduleName = "ToDoList.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/cedrickagtong-intern/Desktop/ToDoList/ToDoList/Core/Services/AuthService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "0"
+                  endingLineNumber = "0">
+               </Location>
+               <Location
+                  uuid = "067CA774-51DE-41B5-BCEB-92EDBA8E3A12 - 8dea9df4790a1a03"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ToDoList.AuthService.errorMessage.getter : Swift.Optional&lt;Swift.String&gt;"
+                  moduleName = "ToDoList.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/cedrickagtong-intern/Desktop/ToDoList/ToDoList/Core/Services/AuthService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "0"
+                  endingLineNumber = "0">
+               </Location>
+               <Location
+                  uuid = "067CA774-51DE-41B5-BCEB-92EDBA8E3A12 - 30ff7476ec95d017"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ToDoList.AuthService.errorMessage.setter : Swift.Optional&lt;Swift.String&gt;"
+                  moduleName = "ToDoList.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/cedrickagtong-intern/Desktop/ToDoList/ToDoList/Core/Services/AuthService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "0"
+                  endingLineNumber = "0">
+               </Location>
+               <Location
+                  uuid = "067CA774-51DE-41B5-BCEB-92EDBA8E3A12 - a8b0a12eb4ccc480"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ToDoList.AuthService.errorMessage.modify : Swift.Optional&lt;Swift.String&gt;"
+                  moduleName = "ToDoList.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/cedrickagtong-intern/Desktop/ToDoList/ToDoList/Core/Services/AuthService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "0"
+                  endingLineNumber = "0">
+               </Location>
+               <Location
+                  uuid = "067CA774-51DE-41B5-BCEB-92EDBA8E3A12 - b2866e58a1b93089"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ToDoList.AuthService.$errorMessage.getter : Combine.Published&lt;Swift.Optional&lt;Swift.String&gt;&gt;.Publisher"
+                  moduleName = "ToDoList.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/cedrickagtong-intern/Desktop/ToDoList/ToDoList/Core/Services/AuthService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "0"
+                  endingLineNumber = "0">
+               </Location>
+               <Location
+                  uuid = "067CA774-51DE-41B5-BCEB-92EDBA8E3A12 - 990160cc69f10828"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ToDoList.AuthService.$errorMessage.setter : Combine.Published&lt;Swift.Optional&lt;Swift.String&gt;&gt;.Publisher"
+                  moduleName = "ToDoList.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/cedrickagtong-intern/Desktop/ToDoList/%3Cstdin%3E"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "0"
+                  endingLineNumber = "0">
+               </Location>
+               <Location
+                  uuid = "067CA774-51DE-41B5-BCEB-92EDBA8E3A12 - 964fe853988d0eee"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ToDoList.AuthService.$errorMessage.modify : Combine.Published&lt;Swift.Optional&lt;Swift.String&gt;&gt;.Publisher"
+                  moduleName = "ToDoList.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/cedrickagtong-intern/Desktop/ToDoList/ToDoList/Core/Services/AuthService.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "0"
+                  endingLineNumber = "0">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>
