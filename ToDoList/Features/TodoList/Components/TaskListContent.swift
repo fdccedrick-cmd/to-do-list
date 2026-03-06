@@ -14,6 +14,32 @@ struct TaskListContent: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 20) {
                 progressCard
+                
+                QuickStatsRow(
+                    upcomingCount: viewModel.upcomingTasks.count,
+                    completedCount: viewModel.completedTasks.count,
+                    overdueCount: viewModel.overdueTasks.count
+                )
+                
+                // Celebration banner when no overdue tasks
+                if viewModel.overdueTasks.isEmpty && !viewModel.incompleteTasks.isEmpty {
+                    EmptyBanner(
+                        icon: "checkmark.circle.fill",
+                        title: "No overdue tasks 🎉",
+                        message: "You're all caught up!",
+                        iconColor: .green
+                    )
+                }
+                
+                // Celebration banner when all tasks completed
+                if viewModel.incompleteTasks.isEmpty && !viewModel.tasks.isEmpty {
+                    EmptyBanner(
+                        icon: "star.fill",
+                        title: "All tasks completed! ✨",
+                        message: "Great work today!",
+                        iconColor: .orange
+                    )
+                }
 
                 if !viewModel.overdueTasks.isEmpty {
                     taskSection(title: "OVERDUE", icon: "exclamationmark.triangle.fill", iconColor: .red, tasks: viewModel.overdueTasks)
@@ -45,45 +71,131 @@ struct TaskListContent: View {
         let total = viewModel.tasks.count
         let completed = viewModel.completedTasks.count
         let progress = total > 0 ? Double(completed) / Double(total) : 0
+        let percentage = Int(progress * 100)
 
-        return VStack(alignment: .leading, spacing: 14) {
+        return VStack(alignment: .leading, spacing: 16) {
+            // Greeting Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Today's Progress")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.secondary)
-                    Text("\(completed) of \(total) tasks done")
-                        .font(.system(size: 20, weight: .bold))
+                    Text(greeting)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.8))
+                    Text(viewModel.profile?.displayName ?? "there")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(.white)
                 }
                 Spacer()
+                Text(greetingEmoji)
+                    .font(.system(size: 36))
+            }
+            
+            // Progress Info
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("You're \(percentage)% through today")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(.white)
+                    Text("\(completed) of \(total) tasks done")
+                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.7))
+                }
+                
+                Spacer()
+                
+                // Circular Progress
                 ZStack {
                     Circle()
-                        .stroke(Color(.systemGray5), lineWidth: 6)
-                        .frame(width: 52, height: 52)
+                        .stroke(Color.white.opacity(0.3), lineWidth: 6)
+                        .frame(width: 56, height: 56)
                     Circle()
                         .trim(from: 0, to: progress)
-                        .stroke(Color.black, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                        .frame(width: 52, height: 52)
+                        .stroke(
+                            LinearGradient(
+                                colors: [.white, .white.opacity(0.8)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            ),
+                            style: StrokeStyle(lineWidth: 6, lineCap: .round)
+                        )
+                        .frame(width: 56, height: 56)
                         .rotationEffect(.degrees(-90))
                         .animation(.spring(response: 0.6), value: progress)
-                    Text("\(Int(progress * 100))%")
-                        .font(.system(size: 11, weight: .bold))
+                    Text("\(percentage)%")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white)
                 }
             }
+            
+            // Progress Bar
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4).fill(Color(.systemGray5)).frame(height: 6)
-                    RoundedRectangle(cornerRadius: 4).fill(Color.black)
-                        .frame(width: geo.size.width * progress, height: 6)
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.white.opacity(0.2))
+                        .frame(height: 8)
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.white, Color.white.opacity(0.9)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: geo.size.width * progress, height: 8)
                         .animation(.spring(response: 0.6), value: progress)
                 }
             }
-            .frame(height: 6)
+            .frame(height: 8)
+            
+            // Streak Badge
+            HStack(spacing: 6) {
+                Text("🔥")
+                    .font(.system(size: 14))
+                Text("1 day streak")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.white.opacity(0.9))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.white.opacity(0.15))
+            .clipShape(Capsule())
         }
         .padding(20)
-        .background(Color.white)
+        .background(
+            LinearGradient(
+                colors: [
+                    Color(red: 0.1, green: 0.1, blue: 0.1),
+                    Color(red: 0.15, green: 0.15, blue: 0.15)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
         .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 2)
+        .shadow(color: .black.opacity(0.2), radius: 12, x: 0, y: 4)
+    }
+    
+    private var greeting: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 0..<12:
+            return "Good Morning"
+        case 12..<17:
+            return "Good Afternoon"
+        default:
+            return "Good Evening"
+        }
+    }
+    
+    private var greetingEmoji: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 0..<12:
+            return "☀️"
+        case 12..<17:
+            return "🌤️"
+        default:
+            return "🌙"
+        }
     }
 
     private func taskSection(

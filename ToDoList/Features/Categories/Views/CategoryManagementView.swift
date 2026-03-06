@@ -14,6 +14,7 @@ struct CategoryManagementView: View {
     @StateObject private var viewModel = CategoryViewModel()
     
     @State private var showAddCategory = false
+    var showDismissButton: Bool = false // Add flag for sheet presentation
     
     var body: some View {
         NavigationStack {
@@ -25,9 +26,11 @@ struct CategoryManagementView: View {
             .navigationTitle("Categories")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
-                        dismiss()
+                if showDismissButton {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Done") {
+                            dismiss()
+                        }
                     }
                 }
                 

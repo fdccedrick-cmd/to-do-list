@@ -22,7 +22,7 @@ struct ContentView: View {
                 }
             } else if authService.isAuthenticated {
                 // Main app view (authenticated)
-                DashboardView()
+                MainTabView()
             } else {
                 // Show login screen
                 LoginView()

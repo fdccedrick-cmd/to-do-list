@@ -75,6 +75,20 @@ class SubtaskViewModel: ObservableObject {
             showError = true
         }
     }
+    
+    // MARK: - Update
+    @MainActor
+    func updateSubtask(_ subtask: Subtask) async {
+        do {
+            let updated = try await repository.updateSubtask(subtask)
+            if let index = subtasks.firstIndex(where: { $0.id == subtask.id }) {
+                subtasks[index] = updated
+            }
+        } catch {
+            errorMessage = "Failed to update subtask: \(error.localizedDescription)"
+            showError = true
+        }
+    }
 
     // MARK: - Delete
     @MainActor

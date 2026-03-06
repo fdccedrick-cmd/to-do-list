@@ -11,6 +11,9 @@ import SwiftUI
 struct SubtaskRowView: View {
     let subtask: Subtask
     @ObservedObject var viewModel: SubtaskViewModel
+    
+    @State private var showEditSheet = false
+    @State private var showDeleteAlert = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -50,14 +53,32 @@ struct SubtaskRowView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive) {
-                _Concurrency.Task {
-                    await viewModel.deleteSubtask(subtask)
-                }
+                showDeleteAlert = true
             } label: {
                 Label("Delete", systemImage: "trash")
             }
+            
+            Button {
+                showEditSheet = true
+            } label: {
+                Label("Edit", systemImage: "pencil")
+            }
+            .tint(.blue)
+        }
+        .sheet(isPresented: $showEditSheet) {
+            EditSubtaskView(viewModel: viewModel, subtask: subtask)
+        }
+        .alert("Delete Subtask", isPresented: $showDeleteAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                _Concurrency.Task {
+                    await viewModel.deleteSubtask(subtask)
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete '\(subtask.title)'?")
         }
     }
 }

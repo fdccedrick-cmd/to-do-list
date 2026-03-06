@@ -9,12 +9,12 @@ import Foundation
 
 enum SupabaseConfig {
     /// Your Supabase project URL
-    /// Get this from: https://app.supabase.com/project/_/settings/api
-    static let supabaseURL = "YOUR_SUPABASE_URL"
+    /// Loaded from SupabaseSecrets.swift (gitignored)
+    static let supabaseURL = SupabaseSecrets.url
     
     /// Your Supabase anon/public key
-    /// Get this from: https://app.supabase.com/project/_/settings/api
-    static let supabaseAnonKey = "YOUR_SUPABASE_ANON_KEY"
+    /// Loaded from SupabaseSecrets.swift (gitignored)
+    static let supabaseAnonKey = SupabaseSecrets.anonKey
     
     /// Table names
     enum Tables {

@@ -11,6 +11,9 @@ struct TaskDetailView: View {
     let task: Task
     @ObservedObject var taskListViewModel: TaskListViewModel
     @Environment(\.dismiss) var dismiss
+    
+    @State private var showEditSheet = false
+    @State private var showDeleteAlert = false
 
     var body: some View {
         ZStack {
@@ -176,6 +179,41 @@ struct TaskDetailView: View {
                     .font(.system(size: 12, weight: .bold))
                     .tracking(3)
             }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button {
+                        showEditSheet = true
+                    } label: {
+                        Label("Edit Task", systemImage: "pencil")
+                    }
+                    
+                    Divider()
+                    
+                    Button(role: .destructive) {
+                        showDeleteAlert = true
+                    } label: {
+                        Label("Delete Task", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .font(.system(size: 18))
+                }
+            }
+        }
+        .sheet(isPresented: $showEditSheet) {
+            EditTaskView(viewModel: taskListViewModel, task: task)
+        }
+        .alert("Delete Task", isPresented: $showDeleteAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                _Concurrency.Task {
+                    await taskListViewModel.deleteTask(task)
+                    dismiss()
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete '\(task.title)'? This action cannot be undone.")
         }
     }
 }
