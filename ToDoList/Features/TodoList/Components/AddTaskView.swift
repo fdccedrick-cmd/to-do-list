@@ -10,13 +10,15 @@ import Auth
 
 struct AddTaskView: View {
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var authService: AuthService  // ✅ unchanged
-    @ObservedObject var viewModel: TaskListViewModel // ✅ unchanged
-    let userId: UUID                                 // ✅ unchanged
+    @EnvironmentObject var authService: AuthService
+    @ObservedObject var viewModel: TaskListViewModel
+    let userId: UUID
 
-    @StateObject private var categoryViewModel = CategoryViewModel() // ✅ unchanged
-    @StateObject private var tagViewModel = TagViewModel()           // ✅ unchanged
+    @StateObject private var categoryViewModel = CategoryViewModel()
+    @StateObject private var tagViewModel = TagViewModel()
 
+    @State private var subtaskTitles: [String] = []   // ✅
+    @State private var newSubtaskTitle: String = ""
     @State private var title = ""                        // ✅ unchanged
     @State private var description = ""                  // ✅ unchanged
     @State private var priority: TaskPriority = .medium  // ✅ unchanged
@@ -214,6 +216,69 @@ struct AddTaskView: View {
                                 }
                             }
                         }
+                        // MARK: - Subtasks Card
+                        formCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                cardLabel("SUBTASKS")
+
+                                // Existing subtask titles preview
+                                if !subtaskTitles.isEmpty {
+                                    VStack(spacing: 0) {
+                                        ForEach(subtaskTitles.indices, id: \.self) { index in
+                                            HStack(spacing: 10) {
+                                                Circle()
+                                                    .stroke(Color(.systemGray4), lineWidth: 1.5)
+                                                    .frame(width: 16, height: 16)
+
+                                                Text(subtaskTitles[index])
+                                                    .font(.system(size: 14))
+                                                    .foregroundColor(.primary)
+
+                                                Spacer()
+
+                                                // Remove
+                                                Button {
+                                                    subtaskTitles.remove(at: index)
+                                                } label: {
+                                                    Image(systemName: "xmark")
+                                                        .font(.system(size: 11, weight: .medium))
+                                                        .foregroundColor(.secondary)
+                                                }
+                                            }
+                                            .padding(.vertical, 8)
+
+                                            if index < subtaskTitles.count - 1 {
+                                                Divider().padding(.leading, 26)
+                                            }
+                                        }
+                                    }
+
+                                    Divider()
+                                }
+
+                                // ✅ Inline add subtask
+                                HStack(spacing: 10) {
+                                    Circle()
+                                        .stroke(Color(.systemGray4), lineWidth: 1.5)
+                                        .frame(width: 16, height: 16)
+
+                                    TextField("Add a subtask...", text: $newSubtaskTitle)
+                                        .font(.system(size: 14))
+                                        .submitLabel(.done)
+                                        .onSubmit { addSubtaskTitle() }
+
+                                    if !newSubtaskTitle.isEmpty {
+                                        Button { addSubtaskTitle() } label: {
+                                            Image(systemName: "plus.circle.fill")
+                                                .font(.system(size: 20))
+                                                .foregroundColor(.black)
+                                        }
+                                        .transition(.scale.combined(with: .opacity))
+                                    }
+                                }
+                                .animation(.spring(response: 0.3), value: newSubtaskTitle.isEmpty)
+                            }
+                        }
 
                         // MARK: - Due Date Card
                         formCard {
@@ -268,6 +333,7 @@ struct AddTaskView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
                         _Concurrency.Task {
+                            // ✅ Step 1: create task (unchanged)
                             await viewModel.createTask(
                                 userId: userId,
                                 title: title,
@@ -276,6 +342,16 @@ struct AddTaskView: View {
                                 categoryId: selectedCategory?.id,
                                 dueDate: hasDueDate ? dueDate : nil
                             )
+
+                            // ✅ Step 2: create each subtask using the new task id
+                            if let newTask = viewModel.tasks.last, !subtaskTitles.isEmpty {
+                                let subtaskVM = SubtaskViewModel(taskId: newTask.id)
+                                for (index, subtaskTitle) in subtaskTitles.enumerated() {
+                                    await subtaskVM.createSubtask(title: subtaskTitle)
+                                    _ = index // suppress unused warning
+                                }
+                            }
+
                             dismiss()
                         }
                     } label: {
@@ -283,7 +359,7 @@ struct AddTaskView: View {
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(title.isEmpty ? .secondary : .black)
                     }
-                    .disabled(title.isEmpty) // ✅ unchanged
+                    .disabled(title.isEmpty)
                 }
             }
             // ✅ All sheets unchanged
@@ -309,6 +385,12 @@ struct AddTaskView: View {
         }
     }
 
+    private func addSubtaskTitle() {
+        let trimmed = newSubtaskTitle.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        subtaskTitles.append(trimmed)
+        newSubtaskTitle = ""
+    }
     // MARK: - UI Helpers
     private func formCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading) {

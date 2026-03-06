@@ -11,40 +11,44 @@ import Supabase
 class TaskService {
     private let supabase = SupabaseManager.shared.client
     
-    // MARK: - Fetch Tasks
-    
-    /// Fetch all tasks for the current user
-    func fetchTasks(for userId: UUID) async throws -> [Task] {
-        let response: [Task] = try await supabase
-            .from("tasks")
-            .select()
-            .eq("user_id", value: userId.uuidString)
-            .order("sort_order", ascending: true)
-            .execute()
-            .value
-        
-        return response
-    }
+    // ✅ Shared select string — single source of truth
+        private let taskSelect = """
+            *,
+            category:categories(*),
+            tags(*)
+        """
+
+   
+    // MARK: - Fetch All
+        func fetchTasks(for userId: UUID) async throws -> [Task] {
+            let response: [Task] = try await supabase
+                .from("tasks")
+                .select(taskSelect)              // ✅ joined
+                .eq("user_id", value: userId.uuidString)
+                .order("sort_order", ascending: true)
+                .execute()
+                .value
+            return response
+        }
     
     /// Fetch incomplete tasks
     func fetchIncompleteTasks(for userId: UUID) async throws -> [Task] {
-        let response: [Task] = try await supabase
-            .from("tasks")
-            .select()
-            .eq("user_id", value: userId.uuidString)
-            .eq("is_completed", value: false)
-            .order("sort_order", ascending: true)
-            .execute()
-            .value
-        
-        return response
-    }
+            let response: [Task] = try await supabase
+                .from("tasks")
+                .select(taskSelect)               // ✅ joined
+                .eq("user_id", value: userId.uuidString)
+                .eq("is_completed", value: false)
+                .order("sort_order", ascending: true)
+                .execute()
+                .value
+            return response
+        }
     
     /// Fetch completed tasks
     func fetchCompletedTasks(for userId: UUID) async throws -> [Task] {
         let response: [Task] = try await supabase
             .from("tasks")
-            .select()
+            .select(taskSelect)
             .eq("user_id", value: userId.uuidString)
             .eq("is_completed", value: true)
             .order("completed_at", ascending: false)
@@ -58,7 +62,7 @@ class TaskService {
     func fetchTasks(for userId: UUID, categoryId: UUID) async throws -> [Task] {
         let response: [Task] = try await supabase
             .from("tasks")
-            .select()
+            .select(taskSelect)  
             .eq("user_id", value: userId.uuidString)
             .eq("category_id", value: categoryId.uuidString)
             .order("sort_order", ascending: true)
@@ -95,7 +99,7 @@ class TaskService {
         let response: Task = try await supabase
             .from("tasks")
             .insert(taskInsert)
-            .select()
+            .select(taskSelect)
             .single()
             .execute()
             .value
@@ -122,7 +126,7 @@ class TaskService {
             .from("tasks")
             .update(taskUpdate)
             .eq("id", value: task.id.uuidString)
-            .select()
+            .select(taskSelect)
             .single()
             .execute()
             .value
@@ -148,7 +152,7 @@ class TaskService {
             .from("tasks")
             .update(taskUpdate)
             .eq("id", value: task.id.uuidString)
-            .select()
+            .select(taskSelect)
             .single()
             .execute()
             .value
