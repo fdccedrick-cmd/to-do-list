@@ -8,20 +8,27 @@
 import Foundation
 import Combine
 
+
 class TaskListViewModel: ObservableObject {
     @Published var tasks: [Task] = []
     @Published var incompleteTasks: [Task] = []
+    @Published var profile: Profile? = nil
     @Published var completedTasks: [Task] = []
     @Published var isLoading = false
     @Published var errorMessage: String? = nil
     @Published var showError = false
     
     private let taskRepository: TaskRepositoryProtocol
+    private let profileRepository: ProfileRepositoryProtocol
     private var cancellables = Set<AnyCancellable>()
     
-    init(taskRepository: TaskRepositoryProtocol = TaskRepository()) {
-        self.taskRepository = taskRepository
-    }
+    init(
+           taskRepository: TaskRepositoryProtocol = TaskRepository(),
+           profileRepository: ProfileRepositoryProtocol = ProfileRepository() // ✅ default
+       ) {
+           self.taskRepository = taskRepository
+           self.profileRepository = profileRepository
+       }
     
     // MARK: - Task Filtering
     
@@ -49,7 +56,10 @@ class TaskListViewModel: ObservableObject {
         }
     }
     
+    
+
     // MARK: - Fetch Tasks
+    
     
     @MainActor
     func fetchTasks(for userId: UUID) async {
@@ -68,7 +78,28 @@ class TaskListViewModel: ObservableObject {
         
         isLoading = false
     }
-    
+    @MainActor
+        func loadDashboard(for userId: UUID) async {
+            isLoading = true
+            errorMessage = nil
+
+            // ✅ fetch profile + tasks concurrently
+            async let profileFetch = fetchProfile(for: userId)
+            async let tasksFetch = fetchTasks(for: userId)
+            _ = await (profileFetch, tasksFetch)
+
+            isLoading = false
+        }
+    @MainActor
+       private func fetchProfile(for userId: UUID) async {
+           do {
+               // ✅ goes through repository → service → supabase
+               profile = try await profileRepository.fetchProfile(for: userId)
+           } catch {
+               // silently fails — profile shows fallback in UI
+               print("Failed to fetch profile: \(error.localizedDescription)")
+           }
+       }
     @MainActor
     func refreshTasks(for userId: UUID) async {
         await fetchTasks(for: userId)

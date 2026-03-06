@@ -9,50 +9,89 @@ import SwiftUI
 import Auth
 
 struct DashboardView: View {
-    @EnvironmentObject var authService: AuthService
-    @StateObject private var viewModel = TaskListViewModel()
-    
+    @EnvironmentObject var authService: AuthService   // ✅ unchanged
+    @StateObject private var viewModel = TaskListViewModel() // ✅ unchanged
+
     @State private var showAddTask = false
     @State private var showProfile = false
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
+                Color(white: 0.96).ignoresSafeArea()
+
+                // ✅ unchanged logic
                 if viewModel.isLoading && viewModel.tasks.isEmpty {
-                    // Loading state
-                    VStack(spacing: 16) {
-                        ProgressView()
-                            .scaleEffect(1.5)
-                        Text("Loading your tasks...")
-                            .foregroundStyle(.secondary)
-                    }
+                    loadingView
                 } else if viewModel.tasks.isEmpty {
-                    // Empty state
                     EmptyStateView(onAddTask: { showAddTask = true })
                 } else {
-                    // Task list
                     TaskListContent(viewModel: viewModel)
                 }
-            }
-            .navigationTitle("My Tasks")
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        showProfile = true
-                    } label: {
-                        Image(systemName: "person.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(.blue)
+
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        addButton
+                            .padding(.trailing, 24)
+                            .padding(.bottom, 32)
                     }
                 }
-                
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showProfile = true } label: {
+                        HStack(spacing: 8) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.black)
+                                    .frame(width: 32, height: 32)
+
+                                // ✅ reads viewModel.profile — no fetching
+                                if let name = viewModel.profile?.displayName,
+                                   let first = name.first {
+                                    Text(String(first).uppercased())
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundColor(.white)
+                                } else {
+                                    Image(systemName: "person.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.white)
+                                }
+                            }
+
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text("Hello,")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.secondary)
+                                Text(viewModel.profile?.displayName ?? "there")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(.primary)
+                            }
+                        }
+                    }
+                }
+
+                ToolbarItem(placement: .principal) {
+                    Text("MY TASKS")
+                        .font(.system(size: 12, weight: .bold))
+                        .tracking(3)
+                        .foregroundColor(.primary)
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showAddTask = true
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(.blue)
+                    HStack(spacing: 4) {
+                        Text("\(viewModel.incompleteTasks.count)")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(width: 24, height: 24)
+                            .background(Color.black)
+                            .clipShape(Circle())
+                        Text("left")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
                     }
                 }
             }
@@ -69,16 +108,49 @@ struct DashboardView: View {
                     Text(errorMessage)
                 }
             }
+            // ✅ View only triggers — ViewModel does all the work
             .task {
-                if let userId = authService.currentUser?.id {
-                    await viewModel.fetchTasks(for: userId)
-                }
+                guard let userId = authService.currentUser?.id else { return }
+                await viewModel.loadDashboard(for: userId)
             }
             .refreshable {
-                if let userId = authService.currentUser?.id {
-                    await viewModel.refreshTasks(for: userId)
-                }
+                guard let userId = authService.currentUser?.id else { return }
+                await viewModel.refreshTasks(for: userId)
             }
+        }
+    }
+
+    private var loadingView: some View {
+        VStack(spacing: 20) {
+            ZStack {
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 72, height: 72)
+                    .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 4)
+                ProgressView()
+                    .scaleEffect(1.2)
+                    .tint(.black)
+            }
+            Text("Loading your tasks...")
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
+        }
+    }
+
+    private var addButton: some View {
+        Button { showAddTask = true } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "plus")
+                    .font(.system(size: 16, weight: .bold))
+                Text("New Task")
+                    .font(.system(size: 14, weight: .semibold))
+            }
+            .foregroundColor(.white)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .background(Color.black)
+            .clipShape(Capsule())
+            .shadow(color: .black.opacity(0.25), radius: 12, x: 0, y: 6)
         }
     }
 }
@@ -87,4 +159,3 @@ struct DashboardView: View {
     DashboardView()
         .environmentObject(AuthService())
 }
-
