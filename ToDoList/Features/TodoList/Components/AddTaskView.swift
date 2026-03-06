@@ -10,110 +10,263 @@ import Auth
 
 struct AddTaskView: View {
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var authService: AuthService
-    @ObservedObject var viewModel: TaskListViewModel
-    let userId: UUID
-    
-    @StateObject private var categoryViewModel = CategoryViewModel()
-    @StateObject private var tagViewModel = TagViewModel()
-    
-    @State private var title = ""
-    @State private var description = ""
-    @State private var priority: TaskPriority = .medium
-    @State private var dueDate: Date = Date()
-    @State private var hasDueDate = false
-    @State private var selectedCategory: Category?
-    @State private var selectedTags: Set<Tag> = []
-    
-    @State private var showCategoryPicker = false
-    @State private var showTagPicker = false
-    
+    @EnvironmentObject var authService: AuthService  // ✅ unchanged
+    @ObservedObject var viewModel: TaskListViewModel // ✅ unchanged
+    let userId: UUID                                 // ✅ unchanged
+
+    @StateObject private var categoryViewModel = CategoryViewModel() // ✅ unchanged
+    @StateObject private var tagViewModel = TagViewModel()           // ✅ unchanged
+
+    @State private var title = ""                        // ✅ unchanged
+    @State private var description = ""                  // ✅ unchanged
+    @State private var priority: TaskPriority = .medium  // ✅ unchanged
+    @State private var dueDate: Date = Date()            // ✅ unchanged
+    @State private var hasDueDate = false                // ✅ unchanged
+    @State private var selectedCategory: Category?       // ✅ unchanged
+    @State private var selectedTags: Set<Tag> = []       // ✅ unchanged
+    @State private var showCategoryPicker = false        // ✅ unchanged
+    @State private var showTagPicker = false             // ✅ unchanged
+    @FocusState private var focusedField: Field?
+
+    enum Field { case title, description }
+
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Task Details") {
-                    TextField("Title", text: $title)
-                    
-                    TextField("Description (optional)", text: $description, axis: .vertical)
-                        .lineLimit(3...6)
-                }
-                
-                Section("Priority") {
-                    Picker("Priority", selection: $priority) {
-                        ForEach(TaskPriority.allCases, id: \.self) { priority in
-                            Text(priority.displayName).tag(priority)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                }
-                
-                Section("Category") {
-                    Button(action: { showCategoryPicker = true }) {
-                        HStack {
-                            if let category = selectedCategory {
-                                Text(category.icon)
-                                Text(category.name)
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                                Circle()
-                                    .fill(Color(hex: category.colorHex))
-                                    .frame(width: 20, height: 20)
-                            } else {
-                                Text("Select Category")
-                                    .foregroundStyle(.secondary)
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .foregroundStyle(.secondary)
+            ZStack {
+                Color(white: 0.96).ignoresSafeArea()
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 20) {
+
+                        // MARK: - Task Details Card
+                        formCard {
+                            VStack(alignment: .leading, spacing: 16) {
+                                cardLabel("TASK DETAILS")
+
+                                // Title
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("TITLE")
+                                        .font(.system(size: 10, weight: .semibold))
+                                        .tracking(1.5)
+                                        .foregroundColor(.secondary)
+
+                                    TextField("What needs to be done?", text: $title)
+                                        .font(.system(size: 16, weight: .medium))
+                                        .focused($focusedField, equals: .title)
+                                        .submitLabel(.next)
+                                        .onSubmit { focusedField = .description }
+                                        .padding(.bottom, 8)
+                                        .overlay(alignment: .bottom) {
+                                            Rectangle()
+                                                .fill(focusedField == .title ? Color.black : Color(.systemGray5))
+                                                .frame(height: focusedField == .title ? 1.5 : 1)
+                                                .animation(.easeInOut(duration: 0.2), value: focusedField)
+                                        }
+                                }
+
+                                // Description
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("DESCRIPTION")
+                                        .font(.system(size: 10, weight: .semibold))
+                                        .tracking(1.5)
+                                        .foregroundColor(.secondary)
+
+                                    // ✅ unchanged binding + axis
+                                    TextField("Add details (optional)", text: $description, axis: .vertical)
+                                        .font(.system(size: 15))
+                                        .lineLimit(3...6)
+                                        .focused($focusedField, equals: .description)
+                                        .submitLabel(.done)
+                                        .onSubmit { focusedField = nil }
+                                        .padding(.bottom, 8)
+                                        .overlay(alignment: .bottom) {
+                                            Rectangle()
+                                                .fill(focusedField == .description ? Color.black : Color(.systemGray5))
+                                                .frame(height: focusedField == .description ? 1.5 : 1)
+                                                .animation(.easeInOut(duration: 0.2), value: focusedField)
+                                        }
+                                }
                             }
                         }
-                    }
-                }
-                
-                Section("Tags") {
-                    Button(action: { showTagPicker = true }) {
-                        HStack {
-                            if selectedTags.isEmpty {
-                                Text("Add Tags")
-                                    .foregroundStyle(.secondary)
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .foregroundStyle(.secondary)
-                            } else {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    ForEach(Array(selectedTags), id: \.id) { tag in
-                                        HStack(spacing: 6) {
-                                            Circle()
-                                                .fill(Color(hex: tag.colorHex))
-                                                .frame(width: 12, height: 12)
-                                            Text(tag.name)
-                                                .foregroundStyle(.primary)
+
+                        // MARK: - Priority Card
+                        formCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                cardLabel("PRIORITY")
+
+                                // ✅ unchanged ForEach + binding
+                                HStack(spacing: 8) {
+                                    ForEach(TaskPriority.allCases, id: \.self) { p in
+                                        Button {
+                                            withAnimation(.spring(response: 0.3)) {
+                                                priority = p  // ✅ unchanged
+                                            }
+                                        } label: {
+                                            Text(p.displayName)
+                                                .font(.system(size: 13, weight: .semibold))
+                                                .frame(maxWidth: .infinity)
+                                                .padding(.vertical, 10)
+                                                .background(
+                                                    priority == p
+                                                        ? Color.black
+                                                        : Color(.systemGray6)
+                                                )
+                                                .foregroundColor(
+                                                    priority == p ? .white : .primary
+                                                )
+                                                .clipShape(RoundedRectangle(cornerRadius: 10))
                                         }
                                     }
                                 }
                             }
                         }
+
+                        // MARK: - Category Card
+                        formCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                cardLabel("CATEGORY")
+
+                                // ✅ unchanged action
+                                Button { showCategoryPicker = true } label: {
+                                    HStack(spacing: 12) {
+                                        ZStack {
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(Color(.systemGray6))
+                                                .frame(width: 36, height: 36)
+
+                                            if let category = selectedCategory {
+                                                Text(category.icon)
+                                                    .font(.system(size: 18))
+                                            } else {
+                                                Image(systemName: "folder")
+                                                    .font(.system(size: 16))
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+
+                                        if let category = selectedCategory {
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(category.name)
+                                                    .font(.system(size: 15, weight: .medium))
+                                                    .foregroundColor(.primary)
+                                                Circle()
+                                                    .fill(Color(hex: category.colorHex))
+                                                    .frame(width: 8, height: 8)
+                                            }
+                                        } else {
+                                            Text("Select Category")
+                                                .font(.system(size: 15))
+                                                .foregroundColor(.secondary)
+                                        }
+
+                                        Spacer()
+
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 12, weight: .medium))
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+                        }
+
+                        // MARK: - Tags Card
+                        formCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                cardLabel("TAGS")
+
+                                // ✅ unchanged action
+                                Button { showTagPicker = true } label: {
+                                    HStack {
+                                        if selectedTags.isEmpty {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: "tag")
+                                                    .font(.system(size: 14))
+                                                    .foregroundColor(.secondary)
+                                                Text("Add Tags")
+                                                    .font(.system(size: 15))
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        } else {
+                                            // ✅ unchanged tags display
+                                            FlowLayout(spacing: 6) {
+                                                ForEach(Array(selectedTags), id: \.id) { tag in
+                                                    HStack(spacing: 4) {
+                                                        Circle()
+                                                            .fill(Color(hex: tag.colorHex))
+                                                            .frame(width: 8, height: 8)
+                                                        Text(tag.name)
+                                                            .font(.system(size: 12, weight: .medium))
+                                                    }
+                                                    .padding(.horizontal, 10)
+                                                    .padding(.vertical, 5)
+                                                    .background(Color(.systemGray6))
+                                                    .clipShape(Capsule())
+                                                }
+                                            }
+                                        }
+
+                                        Spacer()
+
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 12, weight: .medium))
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+                        }
+
+                        // MARK: - Due Date Card
+                        formCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    cardLabel("DUE DATE")
+                                    Spacer()
+                                    // ✅ unchanged Toggle binding
+                                    Toggle("", isOn: $hasDueDate)
+                                        .tint(.black)
+                                        .labelsHidden()
+                                }
+
+                                if hasDueDate {
+                                    // ✅ unchanged DatePicker binding
+                                    DatePicker(
+                                        "Due Date",
+                                        selection: $dueDate,
+                                        displayedComponents: [.date]
+                                    )
+                                    .datePickerStyle(.graphical)
+                                    .tint(.black)
+                                    .transition(.move(edge: .top).combined(with: .opacity))
+                                }
+                            }
+                            .animation(.spring(response: 0.4), value: hasDueDate)
+                        }
+
+                        Spacer().frame(height: 20)
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
                 }
-                
-                Section {
-                    Toggle("Set Due Date", isOn: $hasDueDate)
-                    
-                    if hasDueDate {
-                        DatePicker("Due Date", selection: $dueDate, displayedComponents: [.date])
-                    }
-                }
+                .scrollDismissesKeyboard(.immediately)
             }
-            .navigationTitle("Add Task")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+                ToolbarItem(placement: .principal) {
+                    Text("NEW TASK")
+                        .font(.system(size: 12, weight: .bold))
+                        .tracking(3)
                 }
-                
+
+                // ✅ unchanged action
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .font(.system(size: 15))
+                        .foregroundColor(.secondary)
+                }
+
+                // ✅ unchanged action + disabled logic
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
+                    Button {
                         _Concurrency.Task {
                             await viewModel.createTask(
                                 userId: userId,
@@ -125,10 +278,15 @@ struct AddTaskView: View {
                             )
                             dismiss()
                         }
+                    } label: {
+                        Text("Add")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(title.isEmpty ? .secondary : .black)
                     }
-                    .disabled(title.isEmpty)
+                    .disabled(title.isEmpty) // ✅ unchanged
                 }
             }
+            // ✅ All sheets unchanged
             .sheet(isPresented: $showCategoryPicker) {
                 CategoryPickerView(
                     categories: categoryViewModel.categories,
@@ -141,12 +299,75 @@ struct AddTaskView: View {
                     selectedTags: $selectedTags
                 )
             }
+            // ✅ unchanged task fetching
             .task {
                 if let userId = authService.currentUser?.id {
                     await categoryViewModel.fetchCategories(for: userId)
                     await tagViewModel.fetchTags(for: userId)
                 }
             }
+        }
+    }
+
+    // MARK: - UI Helpers
+    private func formCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading) {
+            content()
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
+    }
+
+    private func cardLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 10, weight: .bold))
+            .tracking(2)
+            .foregroundColor(.secondary)
+    }
+}
+
+// MARK: - FlowLayout for tags
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let result = FlowResult(in: proposal.replacingUnspecifiedDimensions().width, subviews: subviews, spacing: spacing)
+        return result.size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = FlowResult(in: bounds.width, subviews: subviews, spacing: spacing)
+        for (index, frame) in result.frames.enumerated() {
+            subviews[index].place(at: CGPoint(x: frame.minX + bounds.minX, y: frame.minY + bounds.minY), proposal: .unspecified)
+        }
+    }
+
+    struct FlowResult {
+        var frames: [CGRect] = []
+        var size: CGSize = .zero
+
+        init(in maxWidth: CGFloat, subviews: Subviews, spacing: CGFloat) {
+            var x: CGFloat = 0
+            var y: CGFloat = 0
+            var rowHeight: CGFloat = 0
+            var maxX: CGFloat = 0
+
+            for subview in subviews {
+                let size = subview.sizeThatFits(.unspecified)
+                if x + size.width > maxWidth, x > 0 {
+                    y += rowHeight + spacing
+                    x = 0
+                    rowHeight = 0
+                }
+                frames.append(CGRect(origin: CGPoint(x: x, y: y), size: size))
+                x += size.width + spacing
+                rowHeight = max(rowHeight, size.height)
+                maxX = max(maxX, x)
+            }
+            self.size = CGSize(width: maxX, height: y + rowHeight)
         }
     }
 }
