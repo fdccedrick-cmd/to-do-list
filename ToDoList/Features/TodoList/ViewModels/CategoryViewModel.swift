@@ -15,7 +15,11 @@ class CategoryViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var showError = false
     
-    private let categoryService = CategoryService()
+    private let categoryRepository: CategoryRepositoryProtocol
+    
+    init(categoryRepository: CategoryRepositoryProtocol = CategoryRepository()) {
+        self.categoryRepository = categoryRepository
+    }
     
     // MARK: - Fetch Categories
     
@@ -25,7 +29,7 @@ class CategoryViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            categories = try await categoryService.fetchCategories(for: userId)
+            categories = try await categoryRepository.fetchCategories(for: userId)
         } catch {
             errorMessage = "Failed to load categories: \(error.localizedDescription)"
             showError = true
@@ -47,7 +51,7 @@ class CategoryViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            let newCategory = try await categoryService.createCategory(
+            let newCategory = try await categoryRepository.createCategory(
                 userId: userId,
                 name: name,
                 icon: icon,
@@ -69,7 +73,7 @@ class CategoryViewModel: ObservableObject {
     @MainActor
     func updateCategory(_ category: Category) async {
         do {
-            let updatedCategory = try await categoryService.updateCategory(category)
+            let updatedCategory = try await categoryRepository.updateCategory(category)
             
             if let index = categories.firstIndex(where: { $0.id == category.id }) {
                 categories[index] = updatedCategory
@@ -87,7 +91,7 @@ class CategoryViewModel: ObservableObject {
     @MainActor
     func deleteCategory(_ category: Category) async {
         do {
-            try await categoryService.deleteCategory(category)
+            try await categoryRepository.deleteCategory(category)
             categories.removeAll { $0.id == category.id }
         } catch {
             errorMessage = error.localizedDescription

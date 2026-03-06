@@ -16,8 +16,12 @@ class TaskListViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var showError = false
     
-    private let taskService = TaskService()
+    private let taskRepository: TaskRepositoryProtocol
     private var cancellables = Set<AnyCancellable>()
+    
+    init(taskRepository: TaskRepositoryProtocol = TaskRepository()) {
+        self.taskRepository = taskRepository
+    }
     
     // MARK: - Task Filtering
     
@@ -53,7 +57,7 @@ class TaskListViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            let allTasks = try await taskService.fetchTasks(for: userId)
+            let allTasks = try await taskRepository.fetchTasks(for: userId)
             tasks = allTasks
             incompleteTasks = allTasks.filter { !$0.isCompleted }
             completedTasks = allTasks.filter { $0.isCompleted }
@@ -79,19 +83,21 @@ class TaskListViewModel: ObservableObject {
         description: String = "",
         priority: TaskPriority = .medium,
         categoryId: UUID? = nil,
-        dueDate: Date? = nil
+        dueDate: Date? = nil,
+        dueTime: String? = nil
     ) async {
         isLoading = true
         errorMessage = nil
         
         do {
-            let newTask = try await taskService.createTask(
+            let newTask = try await taskRepository.createTask(
                 userId: userId,
                 title: title,
                 description: description,
                 priority: priority,
                 categoryId: categoryId,
-                dueDate: dueDate
+                dueDate: dueDate,
+                dueTime: dueTime
             )
             
             tasks.append(newTask)
@@ -111,7 +117,7 @@ class TaskListViewModel: ObservableObject {
     @MainActor
     func toggleTaskCompletion(_ task: Task) async {
         do {
-            let updatedTask = try await taskService.toggleTaskCompletion(task)
+            let updatedTask = try await taskRepository.toggleTaskCompletion(task)
             
             // Update in local arrays
             if let index = tasks.firstIndex(where: { $0.id == task.id }) {
@@ -136,7 +142,7 @@ class TaskListViewModel: ObservableObject {
     @MainActor
     func updateTask(_ task: Task) async {
         do {
-            let updatedTask = try await taskService.updateTask(task)
+            let updatedTask = try await taskRepository.updateTask(task)
             
             // Update in local arrays
             if let index = tasks.firstIndex(where: { $0.id == task.id }) {
@@ -161,7 +167,7 @@ class TaskListViewModel: ObservableObject {
     @MainActor
     func deleteTask(_ task: Task) async {
         do {
-            try await taskService.deleteTask(task)
+            try await taskRepository.deleteTask(task)
             
             // Remove from local arrays
             tasks.removeAll { $0.id == task.id }

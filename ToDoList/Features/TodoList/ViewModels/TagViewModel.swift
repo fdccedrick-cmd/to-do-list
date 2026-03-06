@@ -15,7 +15,11 @@ class TagViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var showError = false
     
-    private let tagService = TagService()
+    private let tagRepository: TagRepositoryProtocol
+    
+    init(tagRepository: TagRepositoryProtocol = TagRepository()) {
+        self.tagRepository = tagRepository
+    }
     
     // MARK: - Fetch Tags
     
@@ -25,7 +29,7 @@ class TagViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            tags = try await tagService.fetchTags(for: userId)
+            tags = try await tagRepository.fetchTags(for: userId)
         } catch {
             errorMessage = "Failed to load tags: \(error.localizedDescription)"
             showError = true
@@ -46,7 +50,7 @@ class TagViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            let newTag = try await tagService.createTag(
+            let newTag = try await tagRepository.createTag(
                 userId: userId,
                 name: name,
                 colorHex: colorHex
@@ -67,7 +71,7 @@ class TagViewModel: ObservableObject {
     @MainActor
     func updateTag(_ tag: Tag) async {
         do {
-            let updatedTag = try await tagService.updateTag(tag)
+            let updatedTag = try await tagRepository.updateTag(tag)
             
             if let index = tags.firstIndex(where: { $0.id == tag.id }) {
                 tags[index] = updatedTag
@@ -85,7 +89,7 @@ class TagViewModel: ObservableObject {
     @MainActor
     func deleteTag(_ tag: Tag) async {
         do {
-            try await tagService.deleteTag(tag)
+            try await tagRepository.deleteTag(tag)
             tags.removeAll { $0.id == tag.id }
         } catch {
             errorMessage = "Failed to delete tag: \(error.localizedDescription)"
