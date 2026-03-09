@@ -202,12 +202,12 @@ struct DashboardView: View {
                     }
                 }
             }
-            .padding(.leading, 0)   // ✅ no extra leading — parent VStack handles it
+            .padding(.leading, 0)
             .padding(.trailing, 8)
-            .padding(.vertical, 2)  // ✅ reduced vertical breathing room
+            .padding(.vertical, 2)
         }
-        .padding(.horizontal, -16)  // ✅ break out of parent VStack padding → edge to edge
-        .padding(.leading, 16)      // ✅ re-add left only so first pill aligns with content
+        .padding(.horizontal, -16)
+        .padding(.leading, 16)
     }
     
     private var progressCard: some View {
@@ -300,13 +300,12 @@ struct DashboardView: View {
     }
     
     private var filteredTasksContent: some View {
-        VStack(spacing: 8) { // ✅ was 16, now 8 — tighter card list
+        VStack(spacing: 8) {
             let tasks = filteredTasks
 
             if tasks.isEmpty {
                 emptyFilterState
             } else {
-                // ✅ Group incomplete + completed visually
                 let incomplete = tasks.filter { !$0.isCompleted }
                 let completed = tasks.filter { $0.isCompleted }
 
@@ -324,7 +323,6 @@ struct DashboardView: View {
                     }
                 }
 
-                // ✅ Completed section with label
                 if !completed.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 6) {

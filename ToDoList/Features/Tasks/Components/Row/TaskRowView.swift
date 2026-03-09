@@ -28,12 +28,12 @@ struct TaskRowView: View {
             RoundedRectangle(cornerRadius: 3)
                 .fill(task.isCompleted ? Color(.systemGray4) : priorityColor)
                 .frame(width: 4)
-                .padding(.vertical, 0) // ✅ full height, no gap
+                .padding(.vertical, 0)
 
             // MARK: - Checkbox
             Button(action: {
                 _Concurrency.Task {
-                    await viewModel.toggleTaskCompletion(task) // ✅ unchanged
+                    await viewModel.toggleTaskCompletion(task)
                 }
             }) {
                 ZStack {
@@ -109,7 +109,7 @@ struct TaskRowView: View {
                         }
 
                         // Priority badge
-                        PriorityBadge(priority: task.priority) // ✅ unchanged
+                        PriorityBadge(priority: task.priority)
 
                         // Due date
                         if let dueDate = task.dueDate {
@@ -203,7 +203,6 @@ struct TaskRowView: View {
             }
             .padding(.vertical, 14)
         }
-        // ✅ Card background per completion state
         .background(
             task.isCompleted
                 ? Color(.systemGray6).opacity(0.6)
@@ -226,7 +225,6 @@ struct TaskRowView: View {
                 )
         )
         .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
-        // ✅ unchanged swipe + alert
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive) {
                 showDeleteAlert = true
@@ -238,7 +236,7 @@ struct TaskRowView: View {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
                 _Concurrency.Task {
-                    await viewModel.deleteTask(task) // ✅ unchanged
+                    await viewModel.deleteTask(task)
                 }
             }
         } message: {
