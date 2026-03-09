@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct CategoryPickerView: View {
-    @Environment(\.dismiss) var dismiss          // ✅ unchanged
-    let categories: [Category]                   // ✅ unchanged
-    @Binding var selectedCategory: Category?     // ✅ unchanged
+    @Environment(\.dismiss) var dismiss         
+    let categories: [Category]                   
+    @Binding var selectedCategory: Category?     
 
     var body: some View {
         NavigationStack {
@@ -20,7 +20,6 @@ struct CategoryPickerView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 12) {
 
-                        // ✅ None option — unchanged logic
                         categoryRow(
                             icon: "slash.circle",
                             iconColor: .secondary,
@@ -28,11 +27,10 @@ struct CategoryPickerView: View {
                             colorHex: nil,
                             isSelected: selectedCategory == nil
                         ) {
-                            selectedCategory = nil  // ✅ unchanged
+                            selectedCategory = nil 
                             dismiss()
                         }
 
-                        // ✅ unchanged ForEach
                         ForEach(categories) { category in
                             categoryRow(
                                 icon: category.icon,
@@ -41,7 +39,7 @@ struct CategoryPickerView: View {
                                 colorHex: category.colorHex,
                                 isSelected: selectedCategory?.id == category.id
                             ) {
-                                selectedCategory = category  // ✅ unchanged
+                                selectedCategory = category  
                                 dismiss()
                             }
                         }
@@ -60,7 +58,6 @@ struct CategoryPickerView: View {
                         .tracking(3)
                 }
 
-                // ✅ unchanged action
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                         .foregroundColor(.secondary)
@@ -84,7 +81,6 @@ struct CategoryPickerView: View {
                         .fill(iconColor.opacity(0.12))
                         .frame(width: 40, height: 40)
 
-                    // emoji vs SF symbol
                     if icon.count == 1 || icon.unicodeScalars.first?.properties.isEmoji == true {
                         Text(icon)
                             .font(.system(size: 20))

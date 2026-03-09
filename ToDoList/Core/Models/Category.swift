@@ -27,7 +27,7 @@ struct Category: Identifiable, Codable {
     }
 }
 
-// For creating new categories (without timestamp that DB generates)
+// For creating new categories
 struct CategoryInsert: Codable {
     let id: UUID
     let userId: UUID

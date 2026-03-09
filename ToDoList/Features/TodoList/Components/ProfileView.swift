@@ -9,11 +9,11 @@ import SwiftUI
 import Auth
 
 struct ProfileView: View {
-    @Environment(\.dismiss) var dismiss           // ✅ unchanged
-    @EnvironmentObject var authService: AuthService // ✅ unchanged
+    @Environment(\.dismiss) var dismiss        
+    @EnvironmentObject var authService: AuthService 
 
-    @State private var showCategoryManagement = false // ✅ unchanged
-    @State private var showTagManagement = false       // ✅ unchanged
+    @State private var showCategoryManagement = false 
+    @State private var showTagManagement = false      
 
     var body: some View {
         NavigationStack {
@@ -37,7 +37,6 @@ struct ProfileView: View {
                             }
 
                             VStack(spacing: 4) {
-                                // ✅ unchanged data source
                                 Text(authService.currentUser?.email ?? "User")
                                     .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(.primary)
@@ -63,7 +62,6 @@ struct ProfileView: View {
                                 .padding(.top, 16)
                                 .padding(.bottom, 10)
 
-                            // ✅ unchanged action
                             settingsRow(
                                 icon: "folder.fill",
                                 label: "Categories",
@@ -72,7 +70,6 @@ struct ProfileView: View {
 
                             Divider().padding(.leading, 56)
 
-                            // ✅ unchanged action
                             settingsRow(
                                 icon: "tag.fill",
                                 label: "Tags",
@@ -84,7 +81,6 @@ struct ProfileView: View {
                         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
 
                         // MARK: - Sign Out
-                        // ✅ unchanged action
                         Button {
                             _Concurrency.Task {
                                 try? await authService.signOut()
@@ -122,14 +118,12 @@ struct ProfileView: View {
                         .tracking(3)
                 }
 
-                // ✅ unchanged action
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
                         .font(.system(size: 15, weight: .medium))
                         .foregroundColor(.primary)
                 }
             }
-            // ✅ unchanged sheets
             .sheet(isPresented: $showCategoryManagement) {
                 CategoryManagementView()
             }

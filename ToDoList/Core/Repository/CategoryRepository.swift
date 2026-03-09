@@ -7,7 +7,6 @@
 
 import Foundation
 
-/// Protocol defining category data operations
 protocol CategoryRepositoryProtocol {
     func fetchCategories(for userId: UUID) async throws -> [Category]
     func createCategory(userId: UUID, name: String, icon: String, colorHex: String) async throws -> Category
@@ -15,7 +14,6 @@ protocol CategoryRepositoryProtocol {
     func deleteCategory(_ category: Category) async throws
 }
 
-/// Concrete implementation of CategoryRepository using CategoryService
 class CategoryRepository: CategoryRepositoryProtocol {
     private let categoryService: CategoryService
     

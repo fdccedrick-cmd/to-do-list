@@ -24,7 +24,7 @@ class TaskListViewModel: ObservableObject {
     
     init(
            taskRepository: TaskRepositoryProtocol = TaskRepository(),
-           profileRepository: ProfileRepositoryProtocol = ProfileRepository() // ✅ default
+           profileRepository: ProfileRepositoryProtocol = ProfileRepository() 
        ) {
            self.taskRepository = taskRepository
            self.profileRepository = profileRepository
@@ -82,8 +82,6 @@ class TaskListViewModel: ObservableObject {
         func loadDashboard(for userId: UUID) async {
             isLoading = true
             errorMessage = nil
-
-            // ✅ fetch profile + tasks concurrently
             async let profileFetch = fetchProfile(for: userId)
             async let tasksFetch = fetchTasks(for: userId)
             _ = await (profileFetch, tasksFetch)
@@ -93,10 +91,8 @@ class TaskListViewModel: ObservableObject {
     @MainActor
        private func fetchProfile(for userId: UUID) async {
            do {
-               // ✅ goes through repository → service → supabase
                profile = try await profileRepository.fetchProfile(for: userId)
            } catch {
-               // silently fails — profile shows fallback in UI
                print("Failed to fetch profile: \(error.localizedDescription)")
            }
        }
@@ -150,17 +146,14 @@ class TaskListViewModel: ObservableObject {
         do {
             let updatedTask = try await taskRepository.toggleTaskCompletion(task)
             
-            // Update in local arrays
             if let index = tasks.firstIndex(where: { $0.id == task.id }) {
                 tasks[index] = updatedTask
             }
             
             if updatedTask.isCompleted {
-                // Move from incomplete to completed
                 incompleteTasks.removeAll { $0.id == task.id }
                 completedTasks.insert(updatedTask, at: 0)
             } else {
-                // Move from completed to incomplete
                 completedTasks.removeAll { $0.id == task.id }
                 incompleteTasks.append(updatedTask)
             }
@@ -175,7 +168,6 @@ class TaskListViewModel: ObservableObject {
         do {
             let updatedTask = try await taskRepository.updateTask(task)
             
-            // Update in local arrays
             if let index = tasks.firstIndex(where: { $0.id == task.id }) {
                 tasks[index] = updatedTask
             }
@@ -199,8 +191,6 @@ class TaskListViewModel: ObservableObject {
     func deleteTask(_ task: Task) async {
         do {
             try await taskRepository.deleteTask(task)
-            
-            // Remove from local arrays
             tasks.removeAll { $0.id == task.id }
             incompleteTasks.removeAll { $0.id == task.id }
             completedTasks.removeAll { $0.id == task.id }

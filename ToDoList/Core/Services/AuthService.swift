@@ -19,7 +19,6 @@ class AuthService: ObservableObject {
     private let supabase = SupabaseManager.shared.client
     
     init() {
-        // Auth status will be checked in ContentView's .task modifier
     }
     
     // MARK: - Sign Up
@@ -30,24 +29,20 @@ class AuthService: ObservableObject {
         defer { isLoading = false }
         
         do {
-            // Trim whitespace from email
             let cleanEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            print("Attempting sign up with email: \(cleanEmail)")
             
-            print("🔐 Attempting sign up with email: \(cleanEmail)")
-            
-            // Step 1: Sign up user
             let response = try await supabase.auth.signUp(
                 email: cleanEmail,
                 password: password
             )
             
-            print("✅ Sign up response received")
-            print("📧 User ID: \(response.user.id)")
+            print("Sign up response received")
+            print("User ID: \(response.user.id)")
             
             let user = response.user
             currentUser = user
             
-            // Step 2: Create profile in database
             let profileInsert = ProfileInsert(
                 id: user.id,
                 displayName: displayName,
@@ -55,18 +50,16 @@ class AuthService: ObservableObject {
             )
             
             do {
-                print("📝 Creating profile in database...")
+                print("Creating profile in database...")
                 try await supabase
                     .from("profiles")
                     .insert(profileInsert)
                     .execute()
-                print("✅ Profile created successfully")
+                print("Profile created successfully")
             } catch let profileError {
-                // If profile creation fails, show specific error
                 errorMessage = "Account created but profile setup failed: \(profileError.localizedDescription)"
-                print("❌ Profile creation error: \(profileError)")
-                print("❌ Full error: \(String(describing: profileError))")
-                // Still mark as authenticated since the user account exists
+                print("Profile creation error: \(profileError)")
+                print("Full error: \(String(describing: profileError))")
             }
             
             isAuthenticated = true
@@ -74,12 +67,10 @@ class AuthService: ObservableObject {
             let errorDesc = signUpError.localizedDescription
             errorMessage = errorDesc
             
-            // Log detailed error for debugging
-            print("❌ Sign up error: \(signUpError)")
-            print("❌ Error description: \(errorDesc)")
-            print("❌ Full error details: \(String(describing: signUpError))")
+            print("Sign up error: \(signUpError)")
+            print("Error description: \(errorDesc)")
+            print("Full error details: \(String(describing: signUpError))")
             
-            // Provide more helpful error messages
             if errorDesc.contains("invalid") || errorDesc.contains("email") {
                 errorMessage = "Please check your email format and try again"
             } else if errorDesc.contains("password") {
@@ -130,18 +121,17 @@ class AuthService: ObservableObject {
         do {
             let session = try await supabase.auth.session
             
-            // Check if session is expired
             if session.isExpired {
-                print("⚠️ Session is expired, clearing auth state")
+                print("Session is expired, clearing auth state")
                 currentUser = nil
                 isAuthenticated = false
             } else {
                 currentUser = session.user
                 isAuthenticated = true
-                print("✅ Valid session found for user: \(session.user.email ?? "unknown")")
+                print("Valid session found for user: \(session.user.email ?? "unknown")")
             }
         } catch {
-            print("ℹ️ No valid session found")
+            print("No valid session found")
             currentUser = nil
             isAuthenticated = false
         }

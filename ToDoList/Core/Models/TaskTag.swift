@@ -18,8 +18,6 @@ struct TaskTag: Codable {
         case createdAt = "created_at"
     }
 }
-
-// For creating task-tag relationships
 struct TaskTagInsert: Codable {
     let taskId: UUID
     let tagId: UUID

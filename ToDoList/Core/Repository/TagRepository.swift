@@ -7,7 +7,6 @@
 
 import Foundation
 
-/// Protocol defining tag data operations
 protocol TagRepositoryProtocol {
     func fetchTags(for userId: UUID) async throws -> [Tag]
     func createTag(userId: UUID, name: String, colorHex: String) async throws -> Tag
@@ -18,7 +17,6 @@ protocol TagRepositoryProtocol {
     func fetchTagsForTask(taskId: UUID) async throws -> [Tag]
 }
 
-/// Concrete implementation of TagRepository using TagService
 class TagRepository: TagRepositoryProtocol {
     private let tagService: TagService
     

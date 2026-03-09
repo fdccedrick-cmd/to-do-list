@@ -61,7 +61,6 @@ struct Task: Identifiable, Codable {
         case sortOrder = "sort_order"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
-        // ✅ These were missing — Supabase join response keys
         case category
         case tags
         case subtasks
@@ -69,7 +68,6 @@ struct Task: Identifiable, Codable {
         case reminders
     }
 
-    // Regular initializer — unchanged
     init(
         id: UUID,
         userId: UUID,
@@ -105,12 +103,9 @@ struct Task: Identifiable, Codable {
         self.tags = tags
         self.subtasks = subtasks
     }
-
-    // ✅ Custom decoder — now decodes related data too
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        // Core fields — unchanged
         id = try container.decode(UUID.self, forKey: .id)
         userId = try container.decode(UUID.self, forKey: .userId)
         categoryId = try container.decodeIfPresent(UUID.self, forKey: .categoryId)
@@ -119,7 +114,6 @@ struct Task: Identifiable, Codable {
         isCompleted = try container.decode(Bool.self, forKey: .isCompleted)
         priority = try container.decode(TaskPriority.self, forKey: .priority)
 
-        // Due date as string — unchanged
         if let dueDateString = try container.decodeIfPresent(String.self, forKey: .dueDate) {
             dueDate = dateOnlyFormatter.date(from: dueDateString)
         } else {
@@ -131,8 +125,6 @@ struct Task: Identifiable, Codable {
         sortOrder = try container.decode(Int.self, forKey: .sortOrder)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         updatedAt = try container.decode(Date.self, forKey: .updatedAt)
-
-        // ✅ Related data — decode from Supabase join response
         category = try container.decodeIfPresent(Category.self, forKey: .category)
         tags = try container.decodeIfPresent([Tag].self, forKey: .tags)
         subtasks = try container.decodeIfPresent([Subtask].self, forKey: .subtasks)
@@ -140,8 +132,6 @@ struct Task: Identifiable, Codable {
         reminders = try container.decodeIfPresent([Reminder].self, forKey: .reminders)
     }
 }
-
-// TaskInsert — unchanged
 struct TaskInsert: Encodable {
     let id: UUID
     let userId: UUID
@@ -185,8 +175,6 @@ struct TaskInsert: Encodable {
         try container.encode(sortOrder, forKey: .sortOrder)
     }
 }
-
-// TaskUpdate — unchanged
 struct TaskUpdate: Encodable {
     let title: String?
     let description: String?

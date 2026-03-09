@@ -25,7 +25,7 @@ struct Profile: Identifiable, Codable {
     }
 }
 
-// For creating new profiles (without timestamp fields that DB generates)
+// For creating new profiles 
 struct ProfileInsert: Codable {
     let id: UUID
     let displayName: String

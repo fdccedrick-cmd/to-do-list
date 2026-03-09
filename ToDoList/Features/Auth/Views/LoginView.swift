@@ -20,19 +20,16 @@ struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var showSignUp = false
-    @State private var showPassword = false       // ✅ UI only
-    @State private var animateIn = false           // ✅ UI only
-    @FocusState private var focusedField: Field?   // ✅ UI only
+    @State private var showPassword = false       
+    @State private var animateIn = false           
+    @FocusState private var focusedField: Field? 
 
     enum Field { case email, password }
 
     var body: some View {
         NavigationStack {
             ZStack {
-                // ✅ Background
                 Color(white: 0.96).ignoresSafeArea()
-
-                // ✅ Decorative blurred circles
                 GeometryReader { geo in
                     Circle()
                         .fill(Color.black.opacity(0.04))
@@ -109,7 +106,6 @@ struct LoginView: View {
                                         .foregroundColor(focusedField == .email ? .black : .secondary)
                                         .animation(.easeInOut(duration: 0.2), value: focusedField)
 
-                                    // ✅ unchanged backend binding
                                     TextField("Enter your email", text: $email)
                                         .font(.system(size: 15))
                                         .textContentType(.emailAddress)
@@ -150,13 +146,10 @@ struct LoginView: View {
                                         .font(.system(size: 14))
                                         .foregroundColor(focusedField == .password ? .black : .secondary)
                                         .animation(.easeInOut(duration: 0.2), value: focusedField)
-
-                                    // ✅ show/hide toggle — UI only, binding unchanged
                                     Group {
                                         if showPassword {
                                             TextField("Enter your password", text: $password)
                                         } else {
-                                            // ✅ unchanged backend binding
                                             SecureField("Enter your password", text: $password)
                                                 .textContentType(.password)
                                         }
@@ -182,8 +175,6 @@ struct LoginView: View {
                                         .animation(.easeInOut(duration: 0.2), value: focusedField)
                                 }
                             }
-
-                            // ✅ Error Message — unchanged logic, updated UI
                             if let errorMessage = authService.errorMessage {
                                 HStack(spacing: 6) {
                                     Image(systemName: "exclamationmark.circle.fill")
@@ -203,7 +194,7 @@ struct LoginView: View {
 
                         Spacer().frame(height: 36)
 
-                        // MARK: Login Button — ✅ unchanged action
+                        // MARK: Login Button 
                         Button(action: {
                             focusedField = nil
                             _Concurrency.Task {
@@ -212,7 +203,6 @@ struct LoginView: View {
                         }) {
                             ZStack {
                                 if authService.isLoading {
-                                    // ✅ unchanged
                                     ProgressView()
                                         .progressViewStyle(.circular)
                                         .tint(.white)
@@ -229,7 +219,6 @@ struct LoginView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
-                            // ✅ unchanged isFormValid logic
                             .background(isFormValid ? Color.black : Color(.systemGray3))
                             .clipShape(Capsule())
                             .shadow(
@@ -238,21 +227,20 @@ struct LoginView: View {
                             )
                             .animation(.easeInOut(duration: 0.2), value: isFormValid)
                         }
-                        // ✅ unchanged
                         .disabled(!isFormValid || authService.isLoading)
                         .opacity(animateIn ? 1 : 0)
                         .animation(.spring(response: 0.6).delay(0.4), value: animateIn)
 
                         Spacer().frame(height: 28)
 
-                        // MARK: Sign Up Link — ✅ unchanged logic
+                        // MARK: Sign Up Link 
                         HStack(spacing: 4) {
                             Text("Don't have an account?")
                                 .font(.system(size: 14))
                                 .foregroundColor(.secondary)
 
                             Button("Sign Up") {
-                                showSignUp = true  // ✅ unchanged
+                                showSignUp = true  
                             }
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.primary)
@@ -266,16 +254,14 @@ struct LoginView: View {
                 }
                 .scrollDismissesKeyboard(.immediately)
             }
-            .navigationBarHidden(true)  // ✅ unchanged
+            .navigationBarHidden(true)
             .sheet(isPresented: $showSignUp) {
-                SignUpView()             // ✅ unchanged
+                SignUpView()         
             }
             .onAppear { animateIn = true }
             .onTapGesture { focusedField = nil }
         }
     }
-
-    // ✅ Completely unchanged
     private var isFormValid: Bool {
         !email.isEmpty && email.contains("@") && password.count >= 6
     }
@@ -283,5 +269,5 @@ struct LoginView: View {
 
 #Preview {
     LoginView()
-        .environmentObject(AuthService())  // ✅ unchanged
+        .environmentObject(AuthService())
 }

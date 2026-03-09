@@ -24,13 +24,13 @@ struct EditTaskView: View {
     @State private var priority: TaskPriority = .medium
     @State private var dueDate: Date = Date()
     @State private var hasDueDate = false
-    @State private var includeTime = false  // NEW: Time toggle
+    @State private var includeTime = false  
     @State private var selectedCategory: Category?
     @State private var selectedTags: Set<Tag> = []
     @State private var showCategoryPicker = false
     @State private var showTagPicker = false
-    @State private var reminderDates: [Date] = []  // NEW: Reminder dates
-    @State private var showReminderPicker = false  // NEW: Show reminder UI
+    @State private var reminderDates: [Date] = [] 
+    @State private var showReminderPicker = false 
     @State private var isLoadingData = true
     @FocusState private var focusedField: Field?
 
@@ -352,7 +352,6 @@ struct EditTaskView: View {
 
     @MainActor
     private func loadInitialData() async {
-        // Populate fields with current task data
         title = task.title
         description = task.description
         priority = task.priority
@@ -362,11 +361,8 @@ struct EditTaskView: View {
         if let dueDate = task.dueDate {
             self.dueDate = dueDate
             hasDueDate = true
-            // Check if task has time component
             includeTime = task.dueTime != nil
         }
-
-        // Load categories and tags
         if let userId = task.userId as UUID? {
             await categoryViewModel.fetchCategories(for: userId)
             await tagViewModel.fetchTags(for: userId)
@@ -383,7 +379,6 @@ struct EditTaskView: View {
 
     @MainActor
     private func saveChanges() async {
-        // Format time string if time is included
         let timeString: String?
         if includeTime && hasDueDate {
             let formatter = DateFormatter()

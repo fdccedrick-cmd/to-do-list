@@ -23,7 +23,6 @@ struct Tag: Identifiable, Codable, Hashable {
     }
 }
 
-// For creating new tags (without timestamp that DB generates)
 struct TagInsert: Codable {
     let id: UUID
     let userId: UUID
@@ -38,7 +37,6 @@ struct TagInsert: Codable {
     }
 }
 
-// For updating tags
 struct TagUpdate: Codable {
     let name: String
     let colorHex: String

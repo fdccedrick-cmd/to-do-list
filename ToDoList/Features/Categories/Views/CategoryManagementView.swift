@@ -14,7 +14,7 @@ struct CategoryManagementView: View {
     @StateObject private var viewModel = CategoryViewModel()
     
     @State private var showAddCategory = false
-    var showDismissButton: Bool = false // Add flag for sheet presentation
+    var showDismissButton: Bool = false 
     
     var body: some View {
         NavigationStack {

@@ -11,7 +11,7 @@ struct TaskRowView: View {
     let task: Task
     @ObservedObject var viewModel: TaskListViewModel
     @StateObject private var subtaskViewModel: SubtaskViewModel
-    
+
     @State private var showDeleteAlert = false
 
     init(task: Task, viewModel: TaskListViewModel) {
@@ -23,8 +23,18 @@ struct TaskRowView: View {
     }
 
     var body: some View {
-        HStack(spacing: 16) {
-            // ✅ unchanged toggle
+        HStack(spacing: 0) {
+
+            // MARK: - Priority Border
+            Rectangle()
+                .fill(priorityColor)
+                .frame(width: 4)
+                .clipShape(
+                    RoundedRectangle(cornerRadius: 2)
+                )
+                .padding(.vertical, 12)
+
+            // MARK: - Checkbox
             Button(action: {
                 _Concurrency.Task {
                     await viewModel.toggleTaskCompletion(task)
@@ -36,142 +46,158 @@ struct TaskRowView: View {
                             task.isCompleted ? Color.black : Color(.systemGray4),
                             lineWidth: 1.5
                         )
-                        .frame(width: 24, height: 24)
-                    
+                        .frame(width: 22, height: 22)
+
                     if task.isCompleted {
                         Circle()
                             .fill(Color.black)
-                            .frame(width: 24, height: 24)
+                            .frame(width: 22, height: 22)
                         Image(systemName: "checkmark")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.system(size: 9, weight: .bold))
                             .foregroundColor(.white)
                     }
                 }
             }
             .buttonStyle(.plain)
-            
-            VStack(alignment: .leading, spacing: 8) {
-                // ✅ unchanged title
+            .padding(.horizontal, 14)
+
+            // MARK: - Content
+            VStack(alignment: .leading, spacing: 6) {
+
+                // Title
                 Text(task.title)
-                    .font(.system(size: 16, weight: .semibold))
-                    .strikethrough(task.isCompleted, color: .secondary)
-                    .foregroundColor(task.isCompleted ? .secondary : .primary)
-                
-                // ✅ unchanged description
+                    .font(.system(size: 15, weight: .semibold))
+                    .strikethrough(task.isCompleted, color: Color(.systemGray3))
+                    .foregroundColor(task.isCompleted ? Color(.systemGray3) : .primary)
+                    .lineLimit(1)
+
+                // Description
                 if !task.description.isEmpty {
                     Text(task.description)
-                        .font(.system(size: 13))
+                        .font(.system(size: 12))
                         .foregroundColor(.secondary)
-                        .lineLimit(2)
+                        .lineLimit(1)
                 }
-                
-                // MARK: - Category & Meta Row
-                HStack(spacing: 8) {
+
+                // MARK: - Badges Row
+                HStack(spacing: 6) {
+
+                    // Category
                     if let category = task.category {
                         HStack(spacing: 4) {
                             Text(category.icon)
-                                .font(.system(size: 11))
+                                .font(.system(size: 10))
                             Text(category.name)
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundColor(.primary)
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(Color(hex: category.colorHex))
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(
-                            Color(hex: category.colorHex).opacity(0.12)
-                        )
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color(hex: category.colorHex).opacity(0.1))
+                        .clipShape(Capsule())
                         .overlay(
                             Capsule()
-                                .stroke(Color(hex: category.colorHex).opacity(0.3), lineWidth: 1)
+                                .stroke(Color(hex: category.colorHex).opacity(0.25), lineWidth: 1)
                         )
+                    }
+
+                    // Priority
+                    PriorityBadge(priority: task.priority)
+
+                    // Due date
+                    if let dueDate = task.dueDate {
+                        let isOverdue = dueDate < Date() && !task.isCompleted
+                        HStack(spacing: 3) {
+                            Image(systemName: isOverdue ? "calendar.badge.exclamationmark" : "calendar")
+                                .font(.system(size: 10))
+                            Text(dueDate.formatted(.dateTime.month().day()))
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .foregroundColor(isOverdue ? .red : .secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(isOverdue ? Color.red.opacity(0.08) : Color(.systemGray6))
                         .clipShape(Capsule())
                     }
-                    
-                    // MARK: - Tags row
-                    if let tags = task.tags, !tags.isEmpty {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 4) {
-                                ForEach(tags) { tag in
-                                    HStack(spacing: 3) {
-                                        Circle()
-                                            .fill(Color(hex: tag.colorHex))
-                                            .frame(width: 6, height: 6)
-                                        Text(tag.name)
-                                            .font(.system(size: 10, weight: .medium))
-                                            .foregroundColor(.secondary)
-                                    }
-                                    .padding(.horizontal, 7)
-                                    .padding(.vertical, 3)
-                                    .background(Color(.systemGray6))
-                                    .clipShape(Capsule())
-                                }
-                            }
-                        }
-                    }
-                    
-                    // MARK: - Bottom meta row (priority + duedate + subtasks)
-                    HStack(spacing: 8) {
-                        // ✅ unchanged priority badge
-                        PriorityBadge(priority: task.priority)
-                        
-                        // ✅ unchanged due date
-                        if let dueDate = task.dueDate {
-                            HStack(spacing: 4) {
-                                Image(systemName: "calendar")
-                                    .font(.system(size: 10))
-                                Text(dueDate.formatted(.dateTime.month().day()))
-                                    .font(.system(size: 11))
-                            }
-                            .foregroundColor(
-                                dueDate < Date() && !task.isCompleted ? .red : .secondary
-                            )
-                        }
-                        
-                        // ✅ unchanged subtask progress badge
-                        if subtaskViewModel.totalCount > 0 {
-                            HStack(spacing: 4) {
-                                ZStack {
+                }
+
+                // MARK: - Tags Row
+                if let tags = task.tags, !tags.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 4) {
+                            ForEach(tags) { tag in
+                                HStack(spacing: 3) {
                                     Circle()
-                                        .stroke(Color(.systemGray5), lineWidth: 2)
-                                        .frame(width: 14, height: 14)
-                                    Circle()
-                                        .trim(from: 0, to: subtaskViewModel.progress)
-                                        .stroke(
-                                            Color.black,
-                                            style: StrokeStyle(lineWidth: 2, lineCap: .round)
-                                        )
-                                        .frame(width: 14, height: 14)
-                                        .rotationEffect(.degrees(-90))
-                                        .animation(.spring(response: 0.4), value: subtaskViewModel.progress)
+                                        .fill(Color(hex: tag.colorHex))
+                                        .frame(width: 5, height: 5)
+                                    Text(tag.name)
+                                        .font(.system(size: 10, weight: .medium))
+                                        .foregroundColor(.secondary)
                                 }
-                                Text(subtaskViewModel.progressText)
-                                    .font(.system(size: 11))
-                                    .foregroundColor(.secondary)
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 3)
+                                .background(Color(.systemGray6))
+                                .clipShape(Capsule())
                             }
                         }
                     }
                 }
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(Color(.systemGray4))
+
+                // MARK: - Subtask Progress
+                if subtaskViewModel.totalCount > 0 {
+                    HStack(spacing: 6) {
+                        // Mini progress bar
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(Color(.systemGray5))
+                                    .frame(height: 3)
+
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(
+                                        subtaskViewModel.allCompleted
+                                            ? Color.black
+                                            : priorityColor.opacity(0.7)
+                                    )
+                                    .frame(
+                                        width: geo.size.width * subtaskViewModel.progress,
+                                        height: 3
+                                    )
+                                    .animation(.spring(response: 0.4), value: subtaskViewModel.progress)
+                            }
+                        }
+                        .frame(width: 60, height: 3)
+
+                        Text(subtaskViewModel.progressText)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(
+                                subtaskViewModel.allCompleted ? .black : .secondary
+                            )
+
+                        if subtaskViewModel.allCompleted {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 10))
+                                .foregroundColor(.black)
+                        }
+                    }
+                }
             }
-            
-            Spacer()
-            
+
+            Spacer(minLength: 8)
+
+            // MARK: - Chevron
             Image(systemName: "chevron.right")
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundColor(Color(.systemGray4))
+                .padding(.trailing, 16)
         }
-        .overlay(alignment: .leading) {
-            Rectangle()
-                .fill(priorityColor)
-                .frame(width: 4)
-        }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 16)
+        .padding(.vertical, 14)
+        .background(
+            task.isCompleted
+                ? Color(.systemGray6).opacity(0.5)
+                : Color.white
+        )
+        .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive) {
                 showDeleteAlert = true
@@ -193,17 +219,13 @@ struct TaskRowView: View {
             await subtaskViewModel.fetchSubtasks()
         }
     }
-    
+
     private var priorityColor: Color {
         switch task.priority {
-        case .urgent:
-            return .red
-        case .high:
-            return .orange
-        case .medium:
-            return .yellow
-        case .low:
-            return .green
+        case .urgent: return .red
+        case .high:   return .orange
+        case .medium: return Color(hex: "F59E0B")
+        case .low:    return .green
         }
     }
 }

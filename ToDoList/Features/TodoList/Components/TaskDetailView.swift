@@ -102,7 +102,7 @@ struct TaskDetailView: View {
                                 Spacer()
                             }
 
-                            // ✅ Category row
+                            // Category row
                             if let category = task.category {
                                 Divider()
                                 VStack(alignment: .leading, spacing: 6) {
@@ -130,7 +130,7 @@ struct TaskDetailView: View {
                                 }
                             }
 
-                            // ✅ Tags row
+                            // Tags row
                             if let tags = task.tags, !tags.isEmpty {
                                 Divider()
                                 VStack(alignment: .leading, spacing: 6) {
@@ -162,7 +162,7 @@ struct TaskDetailView: View {
                                 }
                             }
                             
-                            // ✅ Reminders row
+                            // Reminders row
                             if !reminders.isEmpty {
                                 Divider()
                                 VStack(alignment: .leading, spacing: 8) {
@@ -205,7 +205,7 @@ struct TaskDetailView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
 
-                    // MARK: - Subtasks ✅ integrated here
+                    // MARK: - Subtasks 
                     SubtaskListView(taskId: task.id)
                 }
                 .padding(.horizontal, 16)

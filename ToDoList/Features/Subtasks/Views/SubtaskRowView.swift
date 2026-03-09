@@ -17,7 +17,6 @@ struct SubtaskRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Checkbox
             Button {
                 _Concurrency.Task {
                     await viewModel.toggleSubtask(subtask)

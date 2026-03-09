@@ -7,7 +7,6 @@
 
 import Foundation
 
-/// Protocol defining task data operations
 protocol TaskRepositoryProtocol {
     func fetchTasks(for userId: UUID) async throws -> [Task]
     func fetchIncompleteTasks(for userId: UUID) async throws -> [Task]
@@ -19,7 +18,6 @@ protocol TaskRepositoryProtocol {
     func deleteTask(_ task: Task) async throws
 }
 
-/// Concrete implementation of TaskRepository using TaskService
 class TaskRepository: TaskRepositoryProtocol {
     private let taskService: TaskService
     

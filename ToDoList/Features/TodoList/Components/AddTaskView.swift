@@ -17,20 +17,20 @@ struct AddTaskView: View {
     @StateObject private var categoryViewModel = CategoryViewModel()
     @StateObject private var tagViewModel = TagViewModel()
 
-    @State private var subtaskTitles: [String] = []   // ✅
+    @State private var subtaskTitles: [String] = []  
     @State private var newSubtaskTitle: String = ""
-    @State private var title = ""                        // ✅ unchanged
-    @State private var description = ""                  // ✅ unchanged
-    @State private var priority: TaskPriority = .medium  // ✅ unchanged
-    @State private var dueDate: Date = Date()            // ✅ unchanged
-    @State private var hasDueDate = false                // ✅ unchanged
-    @State private var includeTime = false               // NEW: Time toggle
-    @State private var selectedCategory: Category?       // ✅ unchanged
-    @State private var selectedTags: Set<Tag> = []       // ✅ unchanged
-    @State private var showCategoryPicker = false        // ✅ unchanged
-    @State private var showTagPicker = false             // ✅ unchanged
-    @State private var reminderDates: [Date] = []        // NEW: Reminder dates
-    @State private var showReminderPicker = false        // NEW: Show reminder UI
+    @State private var title = ""                       
+    @State private var description = ""                  
+    @State private var priority: TaskPriority = .medium 
+    @State private var dueDate: Date = Date()          
+    @State private var hasDueDate = false             
+    @State private var includeTime = false              
+    @State private var selectedCategory: Category?      
+    @State private var selectedTags: Set<Tag> = []     
+    @State private var showCategoryPicker = false     
+    @State private var showTagPicker = false            
+    @State private var reminderDates: [Date] = []       
+    @State private var showReminderPicker = false        
     @FocusState private var focusedField: Field?
 
     enum Field { case title, description }
@@ -76,7 +76,6 @@ struct AddTaskView: View {
                                         .tracking(1.5)
                                         .foregroundColor(.secondary)
 
-                                    // ✅ unchanged binding + axis
                                     TextField("Add details (optional)", text: $description, axis: .vertical)
                                         .font(.system(size: 15))
                                         .lineLimit(3...6)
@@ -99,12 +98,11 @@ struct AddTaskView: View {
                             VStack(alignment: .leading, spacing: 12) {
                                 cardLabel("PRIORITY")
 
-                                // ✅ unchanged ForEach + binding
                                 HStack(spacing: 8) {
                                     ForEach(TaskPriority.allCases, id: \.self) { p in
                                         Button {
                                             withAnimation(.spring(response: 0.3)) {
-                                                priority = p  // ✅ unchanged
+                                                priority = p 
                                             }
                                         } label: {
                                             Text(p.displayName)
@@ -131,7 +129,6 @@ struct AddTaskView: View {
                             VStack(alignment: .leading, spacing: 12) {
                                 cardLabel("CATEGORY")
 
-                                // ✅ unchanged action
                                 Button { showCategoryPicker = true } label: {
                                     HStack(spacing: 12) {
                                         ZStack {
@@ -179,7 +176,6 @@ struct AddTaskView: View {
                             VStack(alignment: .leading, spacing: 12) {
                                 cardLabel("TAGS")
 
-                                // ✅ unchanged action
                                 Button { showTagPicker = true } label: {
                                     HStack {
                                         if selectedTags.isEmpty {
@@ -192,7 +188,6 @@ struct AddTaskView: View {
                                                     .foregroundColor(.secondary)
                                             }
                                         } else {
-                                            // ✅ unchanged tags display
                                             FlowLayout(spacing: 6) {
                                                 ForEach(Array(selectedTags), id: \.id) { tag in
                                                     HStack(spacing: 4) {
@@ -259,7 +254,6 @@ struct AddTaskView: View {
                                     Divider()
                                 }
 
-                                // ✅ Inline add subtask
                                 HStack(spacing: 10) {
                                     Circle()
                                         .stroke(Color(.systemGray4), lineWidth: 1.5)
@@ -386,14 +380,11 @@ struct AddTaskView: View {
                         .tracking(3)
                 }
 
-                // ✅ unchanged action
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                         .font(.system(size: 15))
                         .foregroundColor(.secondary)
                 }
-
-                // ✅ unchanged action + disabled logic
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
                         _Concurrency.Task {
@@ -405,7 +396,6 @@ struct AddTaskView: View {
                                 }
                             }
                             
-                            // ✅ Step 1: create task
                             await viewModel.createTask(
                                 userId: userId,
                                 title: title,
@@ -414,19 +404,15 @@ struct AddTaskView: View {
                                 categoryId: selectedCategory?.id,
                                 dueDate: hasDueDate ? dueDate : nil
                             )
-
-                            // ✅ Step 2: create each subtask using the new task id
                             if let newTask = viewModel.tasks.last {
-                                // Create subtasks
                                 if !subtaskTitles.isEmpty {
                                     let subtaskVM = SubtaskViewModel(taskId: newTask.id)
                                     for (index, subtaskTitle) in subtaskTitles.enumerated() {
                                         await subtaskVM.createSubtask(title: subtaskTitle)
-                                        _ = index // suppress unused warning
+                                        _ = index 
                                     }
                                 }
                                 
-                                // Create reminders
                                 if !reminderDates.isEmpty {
                                     let reminderService = ReminderService()
                                     do {
@@ -452,7 +438,6 @@ struct AddTaskView: View {
                     .disabled(title.isEmpty)
                 }
             }
-            // ✅ All sheets unchanged
             .sheet(isPresented: $showCategoryPicker) {
                 CategoryPickerView(
                     categories: categoryViewModel.categories,
@@ -471,7 +456,6 @@ struct AddTaskView: View {
                     dueDate: dueDate
                 )
             }
-            // ✅ unchanged task fetching
             .task {
                 if let userId = authService.currentUser?.id {
                     await categoryViewModel.fetchCategories(for: userId)
@@ -522,7 +506,6 @@ struct FlowLayout: Layout {
             subviews[index].place(at: CGPoint(x: frame.minX + bounds.minX, y: frame.minY + bounds.minY), proposal: .unspecified)
         }
     }
-
     struct FlowResult {
         var frames: [CGRect] = []
         var size: CGSize = .zero

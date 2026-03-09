@@ -15,7 +15,6 @@ class SupabaseManager {
     let client: SupabaseClient
     
     private init() {
-        // Load credentials from secure config (references gitignored SupabaseSecrets.swift)
         guard let supabaseURL = URL(string: SupabaseConfig.supabaseURL) else {
             fatalError("Invalid Supabase URL in SupabaseConfig")
         }

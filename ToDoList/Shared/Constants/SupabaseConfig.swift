@@ -11,9 +11,7 @@ enum SupabaseConfig {
     /// Your Supabase project URL
     /// Loaded from SupabaseSecrets.swift (gitignored)
     static let supabaseURL = SupabaseSecrets.url
-    
-    /// Your Supabase anon/public key
-    /// Loaded from SupabaseSecrets.swift (gitignored)
+
     static let supabaseAnonKey = SupabaseSecrets.anonKey
     
     /// Table names

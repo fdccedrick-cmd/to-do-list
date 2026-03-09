@@ -12,7 +12,6 @@ class CategoryService {
     private let supabase = SupabaseManager.shared.client
     
     // MARK: - Fetch Categories
-    
     func fetchCategories(for userId: UUID) async throws -> [Category] {
         let response: [Category] = try await supabase
             .from("categories")
@@ -26,7 +25,6 @@ class CategoryService {
     }
     
     // MARK: - Create Category
-    
     func createCategory(
         userId: UUID,
         name: String,
@@ -54,7 +52,6 @@ class CategoryService {
     }
     
     // MARK: - Update Category
-    
     func updateCategory(_ category: Category) async throws -> Category {
         let categoryUpdate = CategoryUpdate(
             name: category.name,
@@ -75,7 +72,6 @@ class CategoryService {
     }
     
     // MARK: - Delete Category
-    
     func deleteCategory(_ category: Category) async throws {
         guard !category.isDefault else {
             throw NSError(domain: "CategoryService", code: 403, userInfo: [

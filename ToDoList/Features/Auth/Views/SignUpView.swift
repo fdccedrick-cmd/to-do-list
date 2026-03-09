@@ -15,15 +15,14 @@
 import SwiftUI
 
 struct SignUpView: View {
-    @Environment(\.dismiss) var dismiss          // ✅ unchanged
-    @EnvironmentObject var authService: AuthService // ✅ unchanged
+    @Environment(\.dismiss) var dismiss       
+    @EnvironmentObject var authService: AuthService 
 
-    @State private var displayName = ""          // ✅ unchanged
-    @State private var email = ""                // ✅ unchanged
-    @State private var password = ""             // ✅ unchanged
-    @State private var confirmPassword = ""      // ✅ unchanged
+    @State private var displayName = ""        
+    @State private var email = ""               
+    @State private var password = ""            
+    @State private var confirmPassword = ""     
 
-    // ✅ UI only states
     @State private var showPassword = false
     @State private var showConfirmPassword = false
     @State private var animateIn = false
@@ -33,10 +32,8 @@ struct SignUpView: View {
 
     var body: some View {
         ZStack {
-            // ✅ Background
             Color(white: 0.96).ignoresSafeArea()
 
-            // ✅ Decorative circles
             GeometryReader { geo in
                 Circle()
                     .fill(Color.black.opacity(0.04))
@@ -56,7 +53,6 @@ struct SignUpView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
 
-                    // MARK: - Header
                     VStack(spacing: 10) {
                         ZStack {
                             Circle()
@@ -79,7 +75,6 @@ struct SignUpView: View {
                     .offset(y: animateIn ? 0 : -20)
                     .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1), value: animateIn)
 
-                    // MARK: - Welcome Text
                     VStack(alignment: .leading, spacing: 0) {
                         Text("Create")
                             .font(.system(size: 44, weight: .bold))
@@ -100,7 +95,6 @@ struct SignUpView: View {
 
                     // MARK: - Form
                     VStack(spacing: 28) {
-
                         // Display Name
                         inputField(
                             label: "DISPLAY NAME",
@@ -140,13 +134,12 @@ struct SignUpView: View {
                                     .foregroundColor(focusedField == .password ? .black : .secondary)
                                     .animation(.easeInOut(duration: 0.2), value: focusedField)
 
-                                // ✅ unchanged binding
                                 Group {
                                     if showPassword {
                                         TextField("Enter your password", text: $password)
                                     } else {
                                         SecureField("Enter your password", text: $password)
-                                            .textContentType(.newPassword) // ✅ unchanged
+                                            .textContentType(.newPassword) 
                                     }
                                 }
                                 .font(.system(size: 15))
@@ -168,7 +161,6 @@ struct SignUpView: View {
                                     .animation(.easeInOut(duration: 0.2), value: focusedField)
                             }
 
-                            // ✅ unchanged hint
                             Text("Minimum 6 characters")
                                 .font(.system(size: 11))
                                 .foregroundColor(.secondary)
@@ -187,13 +179,12 @@ struct SignUpView: View {
                                     .foregroundColor(focusedField == .confirmPassword ? .black : .secondary)
                                     .animation(.easeInOut(duration: 0.2), value: focusedField)
 
-                                // ✅ unchanged binding
                                 Group {
                                     if showConfirmPassword {
                                         TextField("Confirm your password", text: $confirmPassword)
                                     } else {
                                         SecureField("Confirm your password", text: $confirmPassword)
-                                            .textContentType(.newPassword) // ✅ unchanged
+                                            .textContentType(.newPassword) 
                                     }
                                 }
                                 .font(.system(size: 15))
@@ -221,7 +212,6 @@ struct SignUpView: View {
                                     .animation(.easeInOut(duration: 0.2), value: focusedField)
                             }
 
-                            // ✅ unchanged validation
                             if !confirmPassword.isEmpty && password != confirmPassword {
                                 HStack(spacing: 4) {
                                     Image(systemName: "exclamationmark.circle.fill")
@@ -234,7 +224,6 @@ struct SignUpView: View {
                             }
                         }
 
-                        // ✅ unchanged error
                         if let errorMessage = authService.errorMessage {
                             HStack(spacing: 6) {
                                 Image(systemName: "exclamationmark.circle.fill")
@@ -254,11 +243,11 @@ struct SignUpView: View {
 
                     Spacer().frame(height: 36)
 
-                    // MARK: - Sign Up Button — ✅ unchanged action
+                    // MARK: - Sign Up Button 
                     Button(action: {
                         focusedField = nil
                         _Concurrency.Task {
-                            try? await authService.signUp(   // ✅ unchanged
+                            try? await authService.signUp(  
                                 email: email,
                                 password: password,
                                 displayName: displayName
@@ -267,7 +256,7 @@ struct SignUpView: View {
                     }) {
                         ZStack {
                             if authService.isLoading {
-                                ProgressView()              // ✅ unchanged
+                                ProgressView()             
                                     .progressViewStyle(.circular)
                                     .tint(.white)
                                     .scaleEffect(0.9)
@@ -283,7 +272,7 @@ struct SignUpView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
-                        .background(isFormValid ? Color.black : Color(.systemGray3)) // ✅ unchanged isFormValid
+                        .background(isFormValid ? Color.black : Color(.systemGray3)) 
                         .clipShape(Capsule())
                         .shadow(
                             color: isFormValid ? .black.opacity(0.2) : .clear,
@@ -291,20 +280,20 @@ struct SignUpView: View {
                         )
                         .animation(.easeInOut(duration: 0.2), value: isFormValid)
                     }
-                    .disabled(!isFormValid || authService.isLoading) // ✅ unchanged
+                    .disabled(!isFormValid || authService.isLoading)
                     .opacity(animateIn ? 1 : 0)
                     .animation(.spring(response: 0.6).delay(0.4), value: animateIn)
 
                     Spacer().frame(height: 28)
 
-                    // MARK: - Login Link — ✅ unchanged
+                    // MARK: - Login Link
                     HStack(spacing: 4) {
                         Text("Already have an account?")
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
 
                         Button("Sign In") {
-                            dismiss() // ✅ unchanged
+                            dismiss()
                         }
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.primary)
@@ -318,13 +307,12 @@ struct SignUpView: View {
             }
             .scrollDismissesKeyboard(.immediately)
         }
-        // ✅ Removed nav bar — matches LoginView style
         .navigationBarHidden(true)
         .onAppear { animateIn = true }
         .onTapGesture { focusedField = nil }
     }
 
-    // MARK: - Reusable Input Field helper (UI only)
+    // MARK: - Reusable Input Field helper 
     private func inputField(
         label: String,
         placeholder: String,
@@ -369,8 +357,6 @@ struct SignUpView: View {
             }
         }
     }
-
-    // ✅ completely unchanged
     private var isFormValid: Bool {
         !displayName.isEmpty &&
         !email.isEmpty &&
@@ -382,5 +368,5 @@ struct SignUpView: View {
 
 #Preview {
     SignUpView()
-        .environmentObject(AuthService()) // ✅ unchanged
+        .environmentObject(AuthService())
 }

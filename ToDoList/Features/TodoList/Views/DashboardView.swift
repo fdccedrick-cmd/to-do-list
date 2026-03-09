@@ -9,8 +9,8 @@ import SwiftUI
 import Auth
 
 struct DashboardView: View {
-    @EnvironmentObject var authService: AuthService   // ✅ unchanged
-    @StateObject private var viewModel = TaskListViewModel() // ✅ unchanged
+    @EnvironmentObject var authService: AuthService   
+    @StateObject private var viewModel = TaskListViewModel()
 
     @State private var showAddTask = false
     @State private var showProfile = false
@@ -20,7 +20,6 @@ struct DashboardView: View {
             ZStack {
                 Color(white: 0.96).ignoresSafeArea()
 
-                // ✅ unchanged logic
                 if viewModel.isLoading && viewModel.tasks.isEmpty {
                     loadingView
                 } else if viewModel.tasks.isEmpty {
@@ -49,7 +48,6 @@ struct DashboardView: View {
                                     .fill(Color.black)
                                     .frame(width: 32, height: 32)
 
-                                // ✅ reads viewModel.profile — no fetching
                                 if let name = viewModel.profile?.displayName,
                                    let first = name.first {
                                     Text(String(first).uppercased())
@@ -108,7 +106,6 @@ struct DashboardView: View {
                     Text(errorMessage)
                 }
             }
-            // ✅ View only triggers — ViewModel does all the work
             .task {
                 guard let userId = authService.currentUser?.id else { return }
                 await viewModel.loadDashboard(for: userId)

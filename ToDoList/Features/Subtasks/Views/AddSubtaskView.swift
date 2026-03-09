@@ -15,7 +15,6 @@ struct AddSubtaskView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Placeholder circle
             Circle()
                 .stroke(Color(.systemGray4), lineWidth: 1.5)
                 .frame(width: 20, height: 20)
