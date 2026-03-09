@@ -25,6 +25,18 @@ class ReminderService {
         return response
     }
     
+    func fetchAllReminders(for userId: UUID) async throws -> [Reminder] {
+        let response: [Reminder] = try await client
+            .from(SupabaseConfig.Tables.reminders)
+            .select()
+            .eq("user_id", value: userId.uuidString)
+            .order("remind_at")
+            .execute()
+            .value
+        
+        return response
+    }
+    
     // MARK: - Create
     func createReminder(
         taskId: UUID,

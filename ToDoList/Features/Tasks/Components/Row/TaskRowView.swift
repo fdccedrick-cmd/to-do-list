@@ -11,7 +11,6 @@ struct TaskRowView: View {
     let task: Task
     @ObservedObject var viewModel: TaskListViewModel
     @StateObject private var subtaskViewModel: SubtaskViewModel
-
     @State private var showDeleteAlert = false
 
     init(task: Task, viewModel: TaskListViewModel) {
@@ -25,32 +24,29 @@ struct TaskRowView: View {
     var body: some View {
         HStack(spacing: 0) {
 
-            // MARK: - Priority Border
-            Rectangle()
-                .fill(priorityColor)
+            // MARK: - Priority Border (flush to card edge)
+            RoundedRectangle(cornerRadius: 3)
+                .fill(task.isCompleted ? Color(.systemGray4) : priorityColor)
                 .frame(width: 4)
-                .clipShape(
-                    RoundedRectangle(cornerRadius: 2)
-                )
-                .padding(.vertical, 12)
+                .padding(.vertical, 0) // ✅ full height, no gap
 
             // MARK: - Checkbox
             Button(action: {
                 _Concurrency.Task {
-                    await viewModel.toggleTaskCompletion(task)
+                    await viewModel.toggleTaskCompletion(task) // ✅ unchanged
                 }
             }) {
                 ZStack {
                     Circle()
                         .stroke(
-                            task.isCompleted ? Color.black : Color(.systemGray4),
+                            task.isCompleted ? Color(.systemGray4) : priorityColor,
                             lineWidth: 1.5
                         )
                         .frame(width: 22, height: 22)
 
                     if task.isCompleted {
                         Circle()
-                            .fill(Color.black)
+                            .fill(Color(.systemGray4))
                             .frame(width: 22, height: 22)
                         Image(systemName: "checkmark")
                             .font(.system(size: 9, weight: .bold))
@@ -59,17 +55,27 @@ struct TaskRowView: View {
                 }
             }
             .buttonStyle(.plain)
-            .padding(.horizontal, 14)
+            .padding(.leading, 14)
+            .padding(.trailing, 12)
 
             // MARK: - Content
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 5) {
 
-                // Title
-                Text(task.title)
-                    .font(.system(size: 15, weight: .semibold))
-                    .strikethrough(task.isCompleted, color: Color(.systemGray3))
-                    .foregroundColor(task.isCompleted ? Color(.systemGray3) : .primary)
-                    .lineLimit(1)
+                // Title + chevron row
+                HStack(alignment: .center) {
+                    Text(task.title)
+                        .font(.system(size: 14, weight: task.isCompleted ? .regular : .semibold))
+                        .strikethrough(task.isCompleted, color: Color(.systemGray3))
+                        .foregroundColor(task.isCompleted ? Color(.systemGray3) : .primary)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(Color(.systemGray4))
+                        .padding(.trailing, 14)
+                }
 
                 // Description
                 if !task.description.isEmpty {
@@ -80,49 +86,66 @@ struct TaskRowView: View {
                 }
 
                 // MARK: - Badges Row
-                HStack(spacing: 6) {
+                if !task.isCompleted {
+                    HStack(spacing: 5) {
 
-                    // Category
-                    if let category = task.category {
-                        HStack(spacing: 4) {
-                            Text(category.icon)
-                                .font(.system(size: 10))
-                            Text(category.name)
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundColor(Color(hex: category.colorHex))
+                        // Category
+                        if let category = task.category {
+                            HStack(spacing: 3) {
+                                Text(category.icon)
+                                    .font(.system(size: 9))
+                                Text(category.name)
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundColor(Color(hex: category.colorHex))
+                            }
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 3)
+                            .background(Color(hex: category.colorHex).opacity(0.1))
+                            .clipShape(Capsule())
+                            .overlay(
+                                Capsule()
+                                    .stroke(Color(hex: category.colorHex).opacity(0.2), lineWidth: 1)
+                            )
                         }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color(hex: category.colorHex).opacity(0.1))
-                        .clipShape(Capsule())
-                        .overlay(
-                            Capsule()
-                                .stroke(Color(hex: category.colorHex).opacity(0.25), lineWidth: 1)
-                        )
+
+                        // Priority badge
+                        PriorityBadge(priority: task.priority) // ✅ unchanged
+
+                        // Due date
+                        if let dueDate = task.dueDate {
+                            let isOverdue = dueDate < Date() && !task.isCompleted
+                            HStack(spacing: 3) {
+                                Image(systemName: isOverdue ? "calendar.badge.exclamationmark" : "calendar")
+                                    .font(.system(size: 9))
+                                Text(dueDate.formatted(.dateTime.month().day()))
+                                    .font(.system(size: 10, weight: .medium))
+                            }
+                            .foregroundColor(isOverdue ? .red : Color(.systemGray2))
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 3)
+                            .background(isOverdue ? Color.red.opacity(0.07) : Color(.systemGray6))
+                            .clipShape(Capsule())
+                        }
                     }
-
-                    // Priority
-                    PriorityBadge(priority: task.priority)
-
-                    // Due date
-                    if let dueDate = task.dueDate {
-                        let isOverdue = dueDate < Date() && !task.isCompleted
+                } else {
+                    // Completed — show minimal category only
+                    if let category = task.category {
                         HStack(spacing: 3) {
-                            Image(systemName: isOverdue ? "calendar.badge.exclamationmark" : "calendar")
+                            Text(category.icon)
+                                .font(.system(size: 9))
+                            Text(category.name)
                                 .font(.system(size: 10))
-                            Text(dueDate.formatted(.dateTime.month().day()))
-                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Color(.systemGray3))
                         }
-                        .foregroundColor(isOverdue ? .red : .secondary)
-                        .padding(.horizontal, 8)
+                        .padding(.horizontal, 7)
                         .padding(.vertical, 3)
-                        .background(isOverdue ? Color.red.opacity(0.08) : Color(.systemGray6))
+                        .background(Color(.systemGray6))
                         .clipShape(Capsule())
                     }
                 }
 
                 // MARK: - Tags Row
-                if let tags = task.tags, !tags.isEmpty {
+                if let tags = task.tags, !tags.isEmpty, !task.isCompleted {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 4) {
                             ForEach(tags) { tag in
@@ -136,7 +159,7 @@ struct TaskRowView: View {
                                 }
                                 .padding(.horizontal, 7)
                                 .padding(.vertical, 3)
-                                .background(Color(.systemGray6))
+                                .background(Color(hex: tag.colorHex).opacity(0.08))
                                 .clipShape(Capsule())
                             }
                         }
@@ -146,18 +169,16 @@ struct TaskRowView: View {
                 // MARK: - Subtask Progress
                 if subtaskViewModel.totalCount > 0 {
                     HStack(spacing: 6) {
-                        // Mini progress bar
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
                                 RoundedRectangle(cornerRadius: 2)
                                     .fill(Color(.systemGray5))
                                     .frame(height: 3)
-
                                 RoundedRectangle(cornerRadius: 2)
                                     .fill(
                                         subtaskViewModel.allCompleted
-                                            ? Color.black
-                                            : priorityColor.opacity(0.7)
+                                            ? Color(.systemGray4)
+                                            : priorityColor.opacity(0.6)
                                     )
                                     .frame(
                                         width: geo.size.width * subtaskViewModel.progress,
@@ -166,38 +187,46 @@ struct TaskRowView: View {
                                     .animation(.spring(response: 0.4), value: subtaskViewModel.progress)
                             }
                         }
-                        .frame(width: 60, height: 3)
+                        .frame(width: 56, height: 3)
 
                         Text(subtaskViewModel.progressText)
                             .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(
-                                subtaskViewModel.allCompleted ? .black : .secondary
-                            )
+                            .foregroundColor(subtaskViewModel.allCompleted ? Color(.systemGray3) : .secondary)
 
                         if subtaskViewModel.allCompleted {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 10))
-                                .foregroundColor(.black)
+                                .foregroundColor(Color(.systemGray3))
                         }
                     }
                 }
             }
-
-            Spacer(minLength: 8)
-
-            // MARK: - Chevron
-            Image(systemName: "chevron.right")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(Color(.systemGray4))
-                .padding(.trailing, 16)
+            .padding(.vertical, 14)
         }
-        .padding(.vertical, 14)
+        // ✅ Card background per completion state
         .background(
             task.isCompleted
-                ? Color(.systemGray6).opacity(0.5)
+                ? Color(.systemGray6).opacity(0.6)
                 : Color.white
         )
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .shadow(
+            color: task.isCompleted
+                ? Color.clear
+                : Color.black.opacity(0.05),
+            radius: 6, x: 0, y: 2
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(
+                    task.isCompleted
+                        ? Color(.systemGray5)
+                        : Color.clear,
+                    lineWidth: 1
+                )
+        )
         .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
+        // ✅ unchanged swipe + alert
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive) {
                 showDeleteAlert = true
@@ -209,7 +238,7 @@ struct TaskRowView: View {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
                 _Concurrency.Task {
-                    await viewModel.deleteTask(task)
+                    await viewModel.deleteTask(task) // ✅ unchanged
                 }
             }
         } message: {
