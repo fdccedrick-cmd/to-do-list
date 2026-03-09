@@ -8,6 +8,8 @@ import SwiftUI
 
 struct SubtaskListView: View {
     @StateObject var viewModel: SubtaskViewModel
+    @State private var showAllCompletedCelebration = false
+    @State private var previousProgress: Double = 0
 
     init(taskId: UUID) {
         _viewModel = StateObject(wrappedValue: SubtaskViewModel(taskId: taskId))
@@ -43,7 +45,7 @@ struct SubtaskListView: View {
                         Circle()
                             .trim(from: 0, to: viewModel.progress)
                             .stroke(
-                                viewModel.allCompleted ? Color.black : Color.black,
+                                viewModel.allCompleted ? Color.green : Color.black,
                                 style: StrokeStyle(lineWidth: 3, lineCap: .round)
                             )
                             .frame(width: 28, height: 28)
@@ -53,7 +55,25 @@ struct SubtaskListView: View {
                         if viewModel.allCompleted {
                             Image(systemName: "checkmark")
                                 .font(.system(size: 8, weight: .bold))
-                                .foregroundColor(.black)
+                                .foregroundColor(.green)
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                    }
+                    .onChange(of: viewModel.progress) { oldValue, newValue in
+                        // Show celebration when all subtasks completed
+                        if newValue == 1.0 && oldValue < 1.0 && viewModel.totalCount > 0 {
+                            let generator = UINotificationFeedbackGenerator()
+                            generator.notificationOccurred(.success)
+                            
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+                                showAllCompletedCelebration = true
+                            }
+                            
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                withAnimation {
+                                    showAllCompletedCelebration = false
+                                }
+                            }
                         }
                     }
                 }
@@ -110,6 +130,34 @@ struct SubtaskListView: View {
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+        .overlay(alignment: .top) {
+            if showAllCompletedCelebration {
+                HStack(spacing: 8) {
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.yellow)
+                    Text("All subtasks completed!")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.primary)
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.yellow)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(
+                    Capsule()
+                        .fill(Color.green.opacity(0.1))
+                        .overlay(
+                            Capsule()
+                                .stroke(Color.green.opacity(0.3), lineWidth: 1)
+                        )
+                )
+                .padding(.top, 8)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .zIndex(100)
+            }
+        }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK", role: .cancel) {}
         } message: {

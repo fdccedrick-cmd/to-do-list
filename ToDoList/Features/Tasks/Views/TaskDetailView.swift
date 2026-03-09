@@ -16,6 +16,8 @@ struct TaskDetailView: View {
     @State private var showDeleteAlert = false
     @State private var reminders: [Reminder] = []
     @State private var deleteReminderAlert: Reminder?
+    @State private var isAnimatingCompletion = false
+    @State private var showCompletionCelebration = false
     
     private let reminderService = ReminderService()
 
@@ -31,8 +33,36 @@ struct TaskDetailView: View {
                         // Title + completion toggle
                         HStack(spacing: 12) {
                             Button {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                    isAnimatingCompletion = true
+                                }
+                                
+                                // Haptic feedback
+                                let generator = UIImpactFeedbackGenerator(style: .medium)
+                                generator.impactOccurred()
+                                
                                 _Concurrency.Task {
                                     await taskListViewModel.toggleTaskCompletion(task)
+                                    
+                                    // Show celebration if completed
+                                    if task.isCompleted {
+                                        await MainActor.run {
+                                            withAnimation(.easeOut(duration: 0.4)) {
+                                                showCompletionCelebration = true
+                                            }
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                                withAnimation {
+                                                    showCompletionCelebration = false
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    await MainActor.run {
+                                        withAnimation(.spring(response: 0.3)) {
+                                            isAnimatingCompletion = false
+                                        }
+                                    }
                                 }
                             } label: {
                                 ZStack {
@@ -50,8 +80,11 @@ struct TaskDetailView: View {
                                         Image(systemName: "checkmark")
                                             .font(.system(size: 12, weight: .bold))
                                             .foregroundColor(.white)
+                                            .scaleEffect(isAnimatingCompletion ? 1.2 : 1.0)
                                     }
                                 }
+                                .scaleEffect(isAnimatingCompletion ? 1.15 : 1.0)
+                                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isAnimatingCompletion)
                             }
                             .buttonStyle(.plain)
 
@@ -59,6 +92,7 @@ struct TaskDetailView: View {
                                 .font(.system(size: 20, weight: .bold))
                                 .strikethrough(task.isCompleted, color: .secondary)
                                 .foregroundColor(task.isCompleted ? .secondary : .primary)
+                                .animation(.easeInOut(duration: 0.3), value: task.isCompleted)
                         }
 
                         if !task.description.isEmpty {
@@ -211,6 +245,31 @@ struct TaskDetailView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 16)
                 .padding(.bottom, 40)
+            }
+            
+            // MARK: - Completion Celebration Overlay
+            if showCompletionCelebration {
+                VStack {
+                    Spacer()
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.green)
+                        Text("Task Completed!")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.primary)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .background(
+                        Capsule()
+                            .fill(Color.white)
+                            .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+                    )
+                    .padding(.bottom, 80)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+                .zIndex(100)
             }
         }
         .task {

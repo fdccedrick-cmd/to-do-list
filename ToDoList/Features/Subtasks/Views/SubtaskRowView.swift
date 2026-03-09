@@ -14,12 +14,26 @@ struct SubtaskRowView: View {
     
     @State private var showEditSheet = false
     @State private var showDeleteAlert = false
+    @State private var isAnimating = false
 
     var body: some View {
         HStack(spacing: 12) {
             Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                    isAnimating = true
+                }
+                
+                // Haptic feedback
+                let generator = UIImpactFeedbackGenerator(style: .light)
+                generator.impactOccurred()
+                
                 _Concurrency.Task {
                     await viewModel.toggleSubtask(subtask)
+                    await MainActor.run {
+                        withAnimation(.spring(response: 0.3)) {
+                            isAnimating = false
+                        }
+                    }
                 }
             } label: {
                 ZStack {
@@ -34,11 +48,16 @@ struct SubtaskRowView: View {
                         Circle()
                             .fill(Color.black)
                             .frame(width: 20, height: 20)
+                            .transition(.scale.combined(with: .opacity))
                         Image(systemName: "checkmark")
                             .font(.system(size: 9, weight: .bold))
                             .foregroundColor(.white)
+                            .scaleEffect(isAnimating ? 1.3 : 1.0)
+                            .transition(.scale.combined(with: .opacity))
                     }
                 }
+                .scaleEffect(isAnimating ? 1.1 : 1.0)
+                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isAnimating)
             }
             .buttonStyle(.plain)
 
@@ -46,12 +65,16 @@ struct SubtaskRowView: View {
                 .font(.system(size: 14))
                 .strikethrough(subtask.isCompleted, color: .secondary)
                 .foregroundColor(subtask.isCompleted ? .secondary : .primary)
-                .animation(.easeInOut(duration: 0.2), value: subtask.isCompleted)
+                .animation(.easeInOut(duration: 0.3), value: subtask.isCompleted)
 
             Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+        .background(
+            subtask.isCompleted ? Color.black.opacity(0.02) : Color.clear
+        )
+        .animation(.easeInOut(duration: 0.3), value: subtask.isCompleted)
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive) {
                 showDeleteAlert = true
