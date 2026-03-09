@@ -13,7 +13,11 @@ struct ProfileView: View {
     @EnvironmentObject var authService: AuthService 
 
     @State private var showCategoryManagement = false 
-    @State private var showTagManagement = false      
+    @State private var showTagManagement = false   
+    @State private var profile: Profile?
+    @State private var isLoadingProfile = false
+    
+    private let profileService = ProfileService()   
 
     var body: some View {
         NavigationStack {
@@ -37,6 +41,9 @@ struct ProfileView: View {
                             }
 
                             VStack(spacing: 4) {
+                                Text(profile?.displayName ?? authService.currentUser?.email?.components(separatedBy: "@").first ?? "User")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(.primary)
                                 Text(authService.currentUser?.email ?? "User")
                                     .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(.primary)
@@ -129,6 +136,16 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showTagManagement) {
                 TagManagementView()
+            }
+            .task {
+                guard let userId = authService.currentUser?.id else { return }
+                isLoadingProfile = true
+                do {
+                    profile = try await profileService.fetchProfile(for: userId)
+                } catch {
+                    print("Failed to load profile: \(error)")
+                }
+                isLoadingProfile = false
             }
         }
     }

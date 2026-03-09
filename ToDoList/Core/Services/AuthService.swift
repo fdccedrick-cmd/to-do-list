@@ -94,6 +94,7 @@ class AuthService: ObservableObject {
             let session = try await supabase.auth.signIn(
                 email: email,
                 password: password
+            
             )
             
             currentUser = session.user
