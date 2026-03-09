@@ -11,10 +11,19 @@ import SwiftUI
 struct ToDoListApp: App {
     @StateObject private var authService = AuthService()
     
+    init() {
+        // Initialize notification service on app launch
+        _ = NotificationService.shared
+    }
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(authService)
+                .task {
+                    // Request notification permissions on first launch
+                    _ = await NotificationService.shared.requestAuthorization()
+                }
         }
     }
 }

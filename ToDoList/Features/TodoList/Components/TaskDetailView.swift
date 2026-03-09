@@ -14,6 +14,10 @@ struct TaskDetailView: View {
     
     @State private var showEditSheet = false
     @State private var showDeleteAlert = false
+    @State private var reminders: [Reminder] = []
+    @State private var deleteReminderAlert: Reminder?
+    
+    private let reminderService = ReminderService()
 
     var body: some View {
         ZStack {
@@ -157,6 +161,43 @@ struct TaskDetailView: View {
                                     }
                                 }
                             }
+                            
+                            // ✅ Reminders row
+                            if !reminders.isEmpty {
+                                Divider()
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("REMINDERS")
+                                        .font(.system(size: 9, weight: .bold))
+                                        .tracking(1.5)
+                                        .foregroundColor(.secondary)
+                                    
+                                    VStack(spacing: 6) {
+                                        ForEach(reminders) { reminder in
+                                            HStack(spacing: 8) {
+                                                Image(systemName: reminder.isSent ? "bell.fill" : "bell")
+                                                    .font(.system(size: 12))
+                                                    .foregroundColor(reminder.isSent ? .gray : .orange)
+                                                
+                                                Text(reminder.remindAt.formatted(date: .abbreviated, time: .shortened))
+                                                    .font(.system(size: 13))
+                                                    .foregroundColor(.primary)
+                                                
+                                                Spacer()
+                                                
+                                                Button {
+                                                    deleteReminderAlert = reminder
+                                                } label: {
+                                                    Image(systemName: "trash")
+                                                        .font(.system(size: 12))
+                                                        .foregroundColor(.red.opacity(0.7))
+                                                }
+                                                .buttonStyle(.plain)
+                                            }
+                                            .padding(.vertical, 4)
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     .padding(18)
@@ -171,6 +212,9 @@ struct TaskDetailView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 40)
             }
+        }
+        .task {
+            await loadReminders()
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -214,6 +258,38 @@ struct TaskDetailView: View {
             }
         } message: {
             Text("Are you sure you want to delete '\(task.title)'? This action cannot be undone.")
+        }
+        .alert("Delete Reminder", isPresented: .constant(deleteReminderAlert != nil), presenting: deleteReminderAlert) { reminder in
+            Button("Cancel", role: .cancel) {
+                deleteReminderAlert = nil
+            }
+            Button("Delete", role: .destructive) {
+                _Concurrency.Task {
+                    await deleteReminder(reminder)
+                }
+            }
+        } message: { reminder in
+            Text("Are you sure you want to delete this reminder for \(reminder.remindAt.formatted(date: .abbreviated, time: .shortened))?")
+        }
+    }
+    
+    // MARK: - Helper Functions
+    private func loadReminders() async {
+        do {
+            reminders = try await reminderService.fetchReminders(for: task.id)
+        } catch {
+            print("Error loading reminders: \(error)")
+        }
+    }
+    
+    @MainActor
+    private func deleteReminder(_ reminder: Reminder) async {
+        do {
+            try await reminderService.deleteReminder(reminder)
+            reminders.removeAll { $0.id == reminder.id }
+            deleteReminderAlert = nil
+        } catch {
+            print("Error deleting reminder: \(error)")
         }
     }
 }

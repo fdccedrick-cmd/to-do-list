@@ -15,16 +15,22 @@ struct EditTaskView: View {
 
     @StateObject private var categoryViewModel = CategoryViewModel()
     @StateObject private var tagViewModel = TagViewModel()
+    
+    private let reminderService = ReminderService()
+    private let notificationService = NotificationService.shared
 
     @State private var title = ""
     @State private var description = ""
     @State private var priority: TaskPriority = .medium
     @State private var dueDate: Date = Date()
     @State private var hasDueDate = false
+    @State private var includeTime = false  // NEW: Time toggle
     @State private var selectedCategory: Category?
     @State private var selectedTags: Set<Tag> = []
     @State private var showCategoryPicker = false
     @State private var showTagPicker = false
+    @State private var reminderDates: [Date] = []  // NEW: Reminder dates
+    @State private var showReminderPicker = false  // NEW: Show reminder UI
     @State private var isLoadingData = true
     @FocusState private var focusedField: Field?
 
@@ -225,9 +231,73 @@ struct EditTaskView: View {
                                     DatePicker(
                                         "Date",
                                         selection: $dueDate,
-                                        displayedComponents: [.date]
+                                        displayedComponents: includeTime ? [.date, .hourAndMinute] : [.date]
                                     )
                                     .datePickerStyle(.graphical)
+                                    .tint(.black)
+                                    
+                                    Toggle("Include Time", isOn: $includeTime)
+                                        .tint(.black)
+                                        .font(.system(size: 14))
+                                }
+                            }
+                        }
+                        
+                        // MARK: - Reminders Card
+                        if hasDueDate {
+                            formCard {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    cardLabel("REMINDERS")
+                                    
+                                    Button {
+                                        showReminderPicker = true
+                                    } label: {
+                                        HStack {
+                                            Image(systemName: "bell")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.secondary)
+                                            
+                                            if reminderDates.isEmpty {
+                                                Text("Add Reminders")
+                                                    .font(.system(size: 15))
+                                                    .foregroundColor(.secondary)
+                                            } else {
+                                                Text("\(reminderDates.count) reminder\(reminderDates.count == 1 ? "" : "s")")
+                                                    .font(.system(size: 15))
+                                                    .foregroundColor(.primary)
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            Image(systemName: "chevron.right")
+                                                .font(.system(size: 12, weight: .medium))
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    
+                                    if !reminderDates.isEmpty {
+                                        VStack(spacing: 8) {
+                                            ForEach(reminderDates.indices, id: \.self) { index in
+                                                HStack {
+                                                    Image(systemName: "bell.fill")
+                                                        .font(.system(size: 12))
+                                                        .foregroundColor(.orange)
+                                                    Text(reminderDates[index].formatted(date: .abbreviated, time: .shortened))
+                                                        .font(.system(size: 13))
+                                                        .foregroundColor(.secondary)
+                                                    Spacer()
+                                                    Button {
+                                                        reminderDates.remove(at: index)
+                                                    } label: {
+                                                        Image(systemName: "xmark.circle.fill")
+                                                            .font(.system(size: 16))
+                                                            .foregroundColor(.secondary)
+                                                    }
+                                                }
+                                                .padding(.vertical, 4)
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -268,6 +338,12 @@ struct EditTaskView: View {
                     selectedTags: $selectedTags
                 )
             }
+            .sheet(isPresented: $showReminderPicker) {
+                ReminderPickerView(
+                    reminderDates: $reminderDates,
+                    dueDate: dueDate
+                )
+            }
             .task {
                 await loadInitialData()
             }
@@ -286,17 +362,37 @@ struct EditTaskView: View {
         if let dueDate = task.dueDate {
             self.dueDate = dueDate
             hasDueDate = true
+            // Check if task has time component
+            includeTime = task.dueTime != nil
         }
 
         // Load categories and tags
         if let userId = task.userId as UUID? {
             await categoryViewModel.fetchCategories(for: userId)
             await tagViewModel.fetchTags(for: userId)
+            
+            // Load existing reminders
+            do {
+                let reminders = try await reminderService.fetchReminders(for: task.id)
+                reminderDates = reminders.map { $0.remindAt }
+            } catch {
+                print("Error loading reminders: \(error)")
+            }
         }
     }
 
     @MainActor
     private func saveChanges() async {
+        // Format time string if time is included
+        let timeString: String?
+        if includeTime && hasDueDate {
+            let formatter = DateFormatter()
+            formatter.timeStyle = .short
+            timeString = formatter.string(from: dueDate)
+        } else {
+            timeString = nil
+        }
+        
         let updatedTask = Task(
             id: task.id,
             userId: task.userId,
@@ -306,7 +402,7 @@ struct EditTaskView: View {
             isCompleted: task.isCompleted,
             priority: priority,
             dueDate: hasDueDate ? dueDate : nil,
-            dueTime: task.dueTime,
+            dueTime: timeString,
             completedAt: task.completedAt,
             sortOrder: task.sortOrder,
             createdAt: task.createdAt,
@@ -317,6 +413,36 @@ struct EditTaskView: View {
         )
 
         await viewModel.updateTask(updatedTask)
+        
+        // Handle reminders
+        if !reminderDates.isEmpty {
+            // Request notification permission
+            let authorized = await notificationService.requestAuthorization()
+            if authorized, let userId = task.userId as UUID? {
+                do {
+                    // Delete existing reminders
+                    try await reminderService.deleteReminders(for: task.id)
+                    
+                    // Create new reminders
+                    try await reminderService.createReminders(
+                        taskId: task.id,
+                        userId: userId,
+                        reminderDates: reminderDates,
+                        taskTitle: title
+                    )
+                } catch {
+                    print("Error updating reminders: \(error)")
+                }
+            }
+        } else {
+            // Delete all reminders if none selected
+            do {
+                try await reminderService.deleteReminders(for: task.id)
+            } catch {
+                print("Error deleting reminders: \(error)")
+            }
+        }
+        
         dismiss()
     }
 
