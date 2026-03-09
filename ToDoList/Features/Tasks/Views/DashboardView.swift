@@ -23,6 +23,7 @@ struct DashboardView: View {
     @State private var showProfile = false
     @State private var showReminders = false
     @State private var selectedFilter: TaskFilter = .all
+    @State private var selectedTask: Task? = nil
 
     var body: some View {
         NavigationStack {
@@ -133,6 +134,11 @@ struct DashboardView: View {
             }
             .sheet(isPresented: $showReminders) {
                 ReminderListView()
+            }
+            .sheet(item: $selectedTask) { task in
+                NavigationStack {
+                    TaskDetailView(task: task, taskListViewModel: viewModel)
+                }
             }
             .alert("Error", isPresented: $viewModel.showError) {
                 Button("OK", role: .cancel) {}
@@ -312,13 +318,10 @@ struct DashboardView: View {
                 if !incomplete.isEmpty {
                     VStack(spacing: 8) {
                         ForEach(incomplete) { task in
-                            NavigationLink(destination: TaskDetailView(
-                                task: task,
-                                taskListViewModel: viewModel
-                            )) {
-                                TaskRowView(task: task, viewModel: viewModel)
-                            }
-                            .buttonStyle(PlainButtonStyle())
+                            TaskRowView(task: task, viewModel: viewModel)
+                                .onTapGesture {
+                                    selectedTask = task
+                                }
                         }
                     }
                 }
@@ -344,13 +347,10 @@ struct DashboardView: View {
                         .padding(.top, 8)
 
                         ForEach(completed) { task in
-                            NavigationLink(destination: TaskDetailView(
-                                task: task,
-                                taskListViewModel: viewModel
-                            )) {
-                                TaskRowView(task: task, viewModel: viewModel)
-                            }
-                            .buttonStyle(PlainButtonStyle())
+                            TaskRowView(task: task, viewModel: viewModel)
+                                .onTapGesture {
+                                    selectedTask = task
+                                }
                         }
                     }
                 }

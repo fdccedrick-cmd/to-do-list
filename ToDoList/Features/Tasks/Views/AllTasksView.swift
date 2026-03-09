@@ -15,6 +15,7 @@ struct AllTasksView: View {
     @State private var searchText = ""
     @State private var selectedFilter: TaskFilter = .all
     @State private var selectedSort: TaskSort = .dueDate
+    @State private var selectedTask: Task? = nil
     
     enum TaskFilter: String, CaseIterable {
         case all = "All"
@@ -130,6 +131,11 @@ struct AllTasksView: View {
             .sheet(isPresented: $showAddTask) {
                 AddTaskView(viewModel: viewModel, userId: authService.currentUser?.id ?? UUID())
             }
+            .sheet(item: $selectedTask) { task in
+                NavigationStack {
+                    TaskDetailView(task: task, taskListViewModel: viewModel)
+                }
+            }
             .task {
                 guard let userId = authService.currentUser?.id else { return }
                 await viewModel.loadDashboard(for: userId)
@@ -175,12 +181,10 @@ struct AllTasksView: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
                 ForEach(filteredTasks) { task in
-                    NavigationLink {
-                        TaskDetailView(task: task, taskListViewModel: viewModel)
-                    } label: {
-                        TaskRowView(task: task, viewModel: viewModel)
-                    }
-                    .buttonStyle(.plain)
+                    TaskRowView(task: task, viewModel: viewModel)
+                        .onTapGesture {
+                            selectedTask = task
+                        }
                     
                     if task.id != filteredTasks.last?.id {
                         Divider().padding(.leading, 52)

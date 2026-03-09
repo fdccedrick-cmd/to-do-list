@@ -173,24 +173,26 @@ struct TaskDetailView: View {
                                         .tracking(1.5)
                                         .foregroundColor(.secondary)
 
-                                    FlowLayout(spacing: 6) {
-                                        ForEach(tags) { tag in
-                                            HStack(spacing: 4) {
-                                                Circle()
-                                                    .fill(Color(hex: tag.colorHex))
-                                                    .frame(width: 8, height: 8)
-                                                Text(tag.name)
-                                                    .font(.system(size: 12, weight: .medium))
-                                                    .foregroundColor(.primary)
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 6) {
+                                            ForEach(tags) { tag in
+                                                HStack(spacing: 4) {
+                                                    Circle()
+                                                        .fill(Color(hex: tag.colorHex))
+                                                        .frame(width: 8, height: 8)
+                                                    Text(tag.name)
+                                                        .font(.system(size: 12, weight: .medium))
+                                                        .foregroundColor(.primary)
+                                                }
+                                                .padding(.horizontal, 10)
+                                                .padding(.vertical, 5)
+                                                .background(Color(hex: tag.colorHex).opacity(0.1))
+                                                .overlay(
+                                                    Capsule()
+                                                        .stroke(Color(hex: tag.colorHex).opacity(0.3), lineWidth: 1)
+                                                )
+                                                .clipShape(Capsule())
                                             }
-                                            .padding(.horizontal, 10)
-                                            .padding(.vertical, 5)
-                                            .background(Color(hex: tag.colorHex).opacity(0.1))
-                                            .overlay(
-                                                Capsule()
-                                                    .stroke(Color(hex: tag.colorHex).opacity(0.3), lineWidth: 1)
-                                            )
-                                            .clipShape(Capsule())
                                         }
                                     }
                                 }

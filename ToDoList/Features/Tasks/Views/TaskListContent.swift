@@ -9,6 +9,7 @@ import SwiftUI
 
 struct TaskListContent: View {
     @ObservedObject var viewModel: TaskListViewModel
+    @State private var selectedTask: Task? = nil
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -226,16 +227,10 @@ struct TaskListContent: View {
 
             VStack(spacing: 0) {
                 ForEach(tasks) { task in
-                    // ✅ NavigationLink wraps each row → goes to TaskDetailView
-                    NavigationLink {
-                        TaskDetailView(
-                            task: task,
-                            taskListViewModel: viewModel
-                        )
-                    } label: {
-                        TaskRowView(task: task, viewModel: viewModel)
-                    }
-                    .buttonStyle(.plain)
+                    TaskRowView(task: task, viewModel: viewModel)
+                        .onTapGesture {
+                            selectedTask = task
+                        }
 
                     if task.id != tasks.last?.id {
                         Divider().padding(.leading, 52)
@@ -245,6 +240,11 @@ struct TaskListContent: View {
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
+        }
+        .sheet(item: $selectedTask) { task in
+            NavigationStack {
+                TaskDetailView(task: task, taskListViewModel: viewModel)
+            }
         }
     }
 }
